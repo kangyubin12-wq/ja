@@ -5,14 +5,17 @@ const $=id=>document.getElementById(id);
 const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- pixel rendering ---------- */
+let _pid=0;
 function sprite(key,size,extra){
-  const s=SPR[key]; let r="";
+  const s=SPR[key]; const pid="j"+(++_pid);
+  const F=ch=>ch==="+"?`url(#${pid})`:PAL[ch];
+  let r=`<defs><pattern id="${pid}" width=".5" height=".5" patternUnits="userSpaceOnUse"><rect width=".5" height=".5" fill="${PAL.o}"/><rect width=".25" height=".25" fill="${PAL["#"]}"/><rect x=".25" y=".25" width=".25" height=".25" fill="${PAL["#"]}"/></pattern></defs>`;
   const cracks=new Set((extra||[]).map(([y,x])=>y+","+x));
   s.rows.forEach((row,y)=>{[...row].forEach((ch,x)=>{
     if(cracks.has(y+","+x)){r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${PAL["#"]}"/>`;return;}
     if(ch===".")return;
-    if(ch==="e"){r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${PAL[s.base]}"/><rect class="eye" x="${x}" y="${y}" width="1" height="1" fill="${PAL["#"]}"/>`;return;}
-    r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${PAL[ch]}"/>`;
+    if(ch==="e"){r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${F(s.base)}"/><rect class="eye" x="${x}" y="${y}" width="1" height="1" fill="${PAL["#"]}"/>`;return;}
+    r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${F(ch)}"/>`;
   });});
   return `<svg class="spr" viewBox="0 0 16 16" width="${size}" height="${size}" aria-hidden="true">${r}</svg>`;
 }
