@@ -120,6 +120,14 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .pip-note{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(233,231,221,.92);font-size:13px;font-weight:700;text-align:center;padding:10px}
 .pip-note button{font:inherit;font-size:12px;padding:5px 12px;border:2px solid var(--ink);border-radius:6px;background:#fff;cursor:pointer}
 
+html.desk,html.desk body{background:transparent!important;overflow:hidden;margin:0;padding:0}
+html.desk .page,html.desk #intro{display:none!important}
+#desk-dev{display:none}
+html.desk #desk-dev{display:block;position:fixed;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;cursor:grab}
+
+.dl-link{font-size:12.5px;font-weight:700;color:var(--navy);text-decoration:underline;text-underline-offset:3px}
+.dl-link:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+
 /* closet + intro */
 .closet{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
 .closet canvas,.intro-card canvas{width:144px;height:144px;image-rendering:pixelated;border:3px solid var(--ink);border-radius:6px;background:#e9ebe8}
@@ -263,6 +271,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
         </div>
       </div>
       <button type="button" class="pip-btn" id="pip-btn" hidden>⧉ 작은 창으로 띄우기</button>
+      <a class="dl-link" href="https://kangyubin12-wq.github.io/ja/nyang-lions/desktop/NyangLions-setup.zip">🖥 바탕화면 고양이 프로그램 받기 (윈도우)</a>
       <p class="hint">고양이를 톡톡 누르면 쓰다듬어요 · ▶ 또는 톱니바퀴로 메뉴 · 훈련 중엔 화면이나 버튼을 눌러 스윙</p>
     </section>
 
@@ -1134,7 +1143,7 @@ function buildDevStatic(){
   for(let Y=0;Y<DH;Y++) for(let X=0;X<DW;X++){
     if(inside(X,Y)) continue;
     let k = 0; if(inside(X-3,Y-4)) k = 2; else if(inside(X-4,Y-6)) k = 1; else if(inside(X-6,Y-8)) k = 0; else continue;
-    if(k===0 && ((X+Y)&1)) continue; put(X,Y,SH[k]);
+    const i=(Y*DW+X)*4; d[i]=20; d[i+1]=22; d[i+2]=30; d[i+3]=[26,40,58][k];
   }
   for(let Y=0;Y<DH;Y++) for(let X=0;X<DW;X++){
     if(!inside(X,Y)) continue;
@@ -1161,10 +1170,10 @@ function buildDevStatic(){
   for(let Y=0;Y<30;Y++) for(let X=ECX-13;X<ECX+14;X++){ if(inside(X,Y)) continue; const e=((X+.5-ECX)/11)**2+((Y+.5-12)/11)**2, e2=((X+.5-ECX)/6.5)**2+((Y+.5-12)/6.5)**2; if(e<=1 && e2>=1){ const lit = (X-ECX) + (Y-12) < -3; x.fillStyle = e>.8||e2<1.2 ? INK : (lit ? '#fbfaf6' : '#d7d2c6'); x.fillRect(X,Y,1,1); } }
   // paw + arched title
   pixMap(x, ICONS.paw, ECX-4, 38, INK);
-  const title = 'CAT BASEBALL CLUB'; x.font = '700 11px Galmuri11, monospace';
-  const ws = [...title].map(ch => Math.ceil(x.measureText(ch).width)+(ch===' '?-1:1)); const tw = ws.reduce((a,b)=>a+b,0)-1;
+  const title = 'CAT BASEBALL CLUB'; x.font = '11px Galmuri11, monospace';
+  const ws = [...title].map(ch => Math.ceil(x.measureText(ch).width)+(ch===' '?-2:0)); const tw = ws.reduce((a,b)=>a+b,0);
   let tx = Math.round(ECX - tw/2);
-  [...title].forEach((ch,i)=>{ const cx = tx + ws[i]/2; const y = Math.round(71 + ((cx-ECX)/70)**2*5); crispText(x, ch, tx, y, INK, '700 11px Galmuri11, monospace'); tx += ws[i]; });
+  [...title].forEach((ch,i)=>{ const cx = tx + ws[i]/2; const y = Math.round(74 + ((cx-ECX)/70)**2*4); crispText(x, ch, tx, y, INK, '11px Galmuri11, monospace'); tx += ws[i]; });
   // recessed screen bezel
   pxRRect(x, bz.x, bz.y, bz.w, bz.h, 12, INK);
   pxRRect(x, bz.x+2, bz.y+2, bz.w-4, bz.h-4, 10, '#d8d3c7');
@@ -1175,6 +1184,7 @@ function buildDevStatic(){
   pxRRect(x, LCD.x-2, LCD.y-2, LCD.w+4, LCD.h+4, 4, INK);
   // button wells (soft shadow on the shell) + labels
   BTN.forEach(b=>{ pxDisc(x, b.x+2, b.y+4, 13, '#c9c3b5'); pxDisc(x, b.x+1, b.y+2, 12, '#d6d1c5'); });
+  x.font = '700 11px Galmuri11, monospace';
   BTN.forEach(b=>{ const w = Math.ceil(x.measureText(b.label).width); crispText(x, b.label, Math.round(b.x - w/2), b.y + 26, INK, '700 11px Galmuri11, monospace'); });
   pixMap(x, ICONS.paw, ECX-4, 284, INK);
   devStatic = c;
@@ -1262,6 +1272,23 @@ function fitPip(){
   const k = Math.max(base, Math.min(fitW, fitH));
   const c = pip.document.querySelector('#m-dev'); c.style.width = (DW*k/dpr)+'px'; c.style.height = (DH*k/dpr)+'px';
 }
+/* shared tap handling for the mini device (PiP window and desktop app); returns true when the tap hit a control */
+function devHit(px, py){
+  if(BTN.find(b => (px-b.x)**2 + (py-b.y)**2 <= 16*16)) return 'btn';
+  if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y && py<LCD.y+LCD.h) return 'lcd';
+  return null;
+}
+function devPointer(e, dev){
+  const r = dev.getBoundingClientRect(), px = (e.clientX-r.left)/r.width*DW, py = (e.clientY-r.top)/r.height*DH;
+  const b = BTN.find(b => (px-b.x)**2 + (py-b.y)**2 <= 16*16); if(b){ e.preventDefault(); pipPress(b.k); return true; }
+  if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13+SC.h+11 && py<LCD.y+LCD.h){ const k = CELLS[Math.min(4,Math.floor((px-LCD.x)/CW))]; pressed[k]=performance.now(); if(tr){ swing(); return true; } act(k); return true; }
+  if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y && py<LCD.y+13+SC.h){
+    if(tr){ e.preventDefault(); swing(); return true; }
+    const gx = (px-LCD.x)/SC.k, gy = (py-LCD.y-13)/SC.k; if(Math.abs(gx-catX) < 24 && gy > GROUND-92 && gy < GROUND+3) act('pet');
+    return true;
+  }
+  return false;
+}
 async function openPip(){
   if(pip){ pip.focus && pip.focus(); return; }
   try{
@@ -1274,15 +1301,7 @@ async function openPip(){
     w.document.head.appendChild(css); w.document.title = '냥이 라이온즈';
     w.document.body.innerHTML = `<canvas id="m-dev" width="${DW}" height="${DH}" role="img" aria-label="냥이 라이온즈 미니 기기"></canvas>`;
     const dev = w.document.querySelector('#m-dev'); pipCtx = dev.getContext('2d');
-    dev.addEventListener('pointerdown', e=>{
-      const r = dev.getBoundingClientRect(), px = (e.clientX-r.left)/r.width*DW, py = (e.clientY-r.top)/r.height*DH;
-      const b = BTN.find(b => (px-b.x)**2 + (py-b.y)**2 <= 16*16); if(b){ e.preventDefault(); pipPress(b.k); return; }
-      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13+SC.h+11 && py<LCD.y+LCD.h){ const k = CELLS[Math.min(4,Math.floor((px-LCD.x)/CW))]; pressed[k]=performance.now(); if(tr){ swing(); return; } act(k); return; }
-      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13 && py<LCD.y+13+SC.h){
-        if(tr){ e.preventDefault(); swing(); return; }
-        const gx = (px-LCD.x)/SC.k, gy = (py-LCD.y-13)/SC.k; if(Math.abs(gx-catX) < 24 && gy > GROUND-92 && gy < GROUND+3) act('pet');
-      }
-    });
+    dev.addEventListener('pointerdown', e=>devPointer(e, dev));
     w.document.addEventListener('keydown', e=>{ if(tr && (e.code==='Space'||e.key===' ')){ e.preventDefault(); swing(); } });
     w.addEventListener('resize', fitPip);
     w.addEventListener('pagehide', ()=>{ pip = null; pipCtx = null; $('#pip-note').hidden = true; $('#pip-btn').hidden = false; });
@@ -1297,6 +1316,61 @@ async function openPip(){
 if('documentPictureInPicture' in window){ $('#pip-btn').hidden = false; }
 $('#pip-btn').addEventListener('click', openPip);
 $('#pip-back').addEventListener('click', ()=>{ if(pip) pip.close(); });
+
+/* ---------- desktop app mode (Electron wrapper provides window.nyangDesktop) ---------- */
+if(window.nyangDesktop){
+  const D = window.nyangDesktop;
+  document.documentElement.classList.add('desk');
+  if(!st.setup){ st.setup = true; save(); }
+  $('#intro').hidden = true;
+  const dev = document.createElement('canvas'); dev.id = 'desk-dev'; dev.width = DW; dev.height = DH; document.body.appendChild(dev);
+  pipCtx = dev.getContext('2d');
+  let deskK = st.deskK || (devicePixelRatio >= 2 ? Math.floor(devicePixelRatio) : 1);
+  function deskSize(){ const dpr = devicePixelRatio || 1; const w = DW*deskK/dpr, h = DH*deskK/dpr; dev.style.width = w+'px'; dev.style.height = h+'px'; D.setSize(Math.ceil(w), Math.ceil(h)); }
+  deskSize(); matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener('change', deskSize);
+  const artXY = e => { const r = dev.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*DW, (e.clientY-r.top)/r.height*DH]; };
+  const onEgg = (px,py) => { const Y = Math.floor(py), h = eggHalf(Y); return (h >= 0 && Math.abs(px-ECX) <= h+1) || ((px-ECX)**2 + (py-12)**2 <= 12*12); };
+  let drag = null, ignoring = null;
+  dev.addEventListener('pointerdown', e=>{
+    if(e.button !== 0) return;
+    const [px,py] = artXY(e);
+    if(!onEgg(px,py)) return;
+    if(devHit(px,py)){ devPointer(e, dev); return; }
+    drag = {x:e.screenX, y:e.screenY}; dev.setPointerCapture(e.pointerId);
+  });
+  dev.addEventListener('pointermove', e=>{
+    if(drag){ const dx = e.screenX-drag.x, dy = e.screenY-drag.y; if(dx||dy){ D.move(dx, dy); drag = {x:e.screenX, y:e.screenY}; } return; }
+    const [px,py] = artXY(e), ig = !onEgg(px,py); if(ig !== ignoring){ ignoring = ig; D.setIgnore(ig); }
+  });
+  dev.addEventListener('pointerup', ()=>{ drag = null; });
+  document.addEventListener('mouseleave', ()=>{ if(!drag && ignoring !== true){ ignoring = true; D.setIgnore(true); } });
+  document.addEventListener('keydown', e=>{ if(tr && (e.code==='Space'||e.key===' ')){ e.preventDefault(); swing(); } });
+  dev.addEventListener('contextmenu', e=>{
+    e.preventDefault();
+    D.showMenu({k: deskK, sleeping: st.sleeping, training: !!tr, fur: st.fur, cap: st.cap,
+      furs: Object.entries(FURS).map(([k,v])=>({k, n:v.n})), caps: Object.entries(CAPS).map(([k,v])=>({k, n:v.n})),
+      accs: ACCS.map(a=>({k:a.k, n:a.n, ok:a.ok(), on:!!st.acc[a.k], how:a.how}))});
+  });
+  D.onCmd(o=>{
+    if(o.t==='act') act(o.k);
+    else if(o.t==='fur'){ st.fur = o.k; refreshLooks(); }
+    else if(o.t==='cap'){ st.cap = o.k; refreshLooks(); }
+    else if(o.t==='acc'){ st.acc = {...st.acc, [o.k]: !st.acc[o.k]}; refreshLooks(); }
+    else if(o.t==='size'){ deskK = o.k; st.deskK = o.k; save(); deskSize(); }
+    else if(o.t==='name'){ }
+  });
+  /* gentle desktop reminders when the cat needs something */
+  const warned = {};
+  setInterval(()=>{
+    const needs = [['hunger','배고파해요 🍚'],['energy','졸려해요 💤'],['clean','꼬질꼬질해요 🫧'],['happy','심심해해요 ⚾']];
+    needs.forEach(([k,msg])=>{
+      if(st[k] < 25 && !warned[k] && !st.sleeping){ warned[k] = true; try{ new Notification('냥이 라이온즈', {body: `${st.name}(이)가 ${msg}`}); }catch(e){} }
+      if(st[k] > 40) warned[k] = false;
+    });
+  }, 30000);
+  pipMsg = {text: `${st.name}(이)가 바탕화면에 왔어요!`, until: performance.now()+4000};
+  if(document.fonts) document.fonts.ready.then(()=>{ devStatic = null; });
+}
 
 /* loop */
 let lastTs = performance.now(), acc = 0, saveAcc = 0;
