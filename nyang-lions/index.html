@@ -1386,7 +1386,7 @@ if(window.nyangDesktop){
     });
   }, 30000);
   pipMsg = {text: `${st.name}(이)가 바탕화면에 왔어요!`, until: performance.now()+4000};
-  if(document.fonts) document.fonts.ready.then(()=>{ devStatic = null; });
+  if(document.fonts){ Promise.all([document.fonts.load('11px Galmuri11'), document.fonts.load('700 11px Galmuri11')]).then(()=>{ devStatic = null; }).catch(()=>{}); }
 }
 
 /* loop */
