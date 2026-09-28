@@ -1098,10 +1098,11 @@ function initLooks(){
 
 /* ---------- mini tamagotchi window (Document Picture-in-Picture, Chrome/Edge desktop) ----------
    The whole handheld is drawn as pixel art on one canvas, then shown at a whole-number zoom. */
-const DW = 330, DH = 458, INK = '#2c2e3d', ECX = 160, ECY = 234, ERX = 148, ERY = 210;
-const LCD = {x:80, y:134, w:160, h:160};
-const BTN = [{k:'feed', x:104, y:344, label:'FEED'}, {k:'play', x:160, y:356, label:'PLAY'}, {k:'pet', x:216, y:344, label:'CARE'}];
-const CELLS = ['feed','play','pet','sleep','train'];
+const DW = 226, DH = 312, INK = '#2c2e3d', ECX = 110, ECY = 158, ERX = 100, ERY = 140;
+const LCD = {x:54, y:96, w:112, h:120};
+const SC = {w:112, h:84, k:.7};  /* scene is the game shown at 70%, cat drawn at 1x */
+const BTN = [{k:'feed', x:72, y:243, label:'FEED'}, {k:'play', x:110, y:252, label:'PLAY'}, {k:'pet', x:148, y:243, label:'CARE'}];
+const CELLS = ['feed','play','pet','sleep','train']; const CW = LCD.w/5;
 const DEV = document.createElement('canvas'); DEV.width = DW; DEV.height = DH;
 const dctx = DEV.getContext('2d');
 let devStatic = null; const pressed = {};
@@ -1128,11 +1129,11 @@ function buildDevStatic(){
   const put = (X,Y,col) => { const i=(Y*DW+X)*4; d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; d[i+3]=255; };
   const SHELL = ['#b3ac9c','#c3bcad','#d1cbbe','#dfdacf','#e9e6dd','#f2f0e9','#f8f7f2','#fdfcfa'].map(hex);
   const IK = hex(INK), SN = hex('#4d63a0'), SL = hex('#e4e8f2'), BK = [0,0,0], SH = [hex('#dcd9cf'), hex('#d0ccc1'), hex('#c4bfb3')];
-  const bz = {x: LCD.x-14, y: LCD.y-14, w: LCD.w+28, h: LCD.h+28};
+  const bz = {x: LCD.x-11, y: LCD.y-11, w: LCD.w+22, h: LCD.h+22};
   // soft drop shadow down-right of the shell
   for(let Y=0;Y<DH;Y++) for(let X=0;X<DW;X++){
     if(inside(X,Y)) continue;
-    let k = 0; if(inside(X-4,Y-6)) k = 2; else if(inside(X-6,Y-9)) k = 1; else if(inside(X-8,Y-12)) k = 0; else continue;
+    let k = 0; if(inside(X-3,Y-4)) k = 2; else if(inside(X-4,Y-6)) k = 1; else if(inside(X-6,Y-8)) k = 0; else continue;
     if(k===0 && ((X+Y)&1)) continue; put(X,Y,SH[k]);
   }
   for(let Y=0;Y<DH;Y++) for(let X=0;X<DW;X++){
@@ -1146,8 +1147,8 @@ function buildDevStatic(){
     let col = ramp(SHELL, I, X, Y);
     if(((u+.42)/.2)**2 + ((v+.52)/.1)**2 < 1) col = hex('#ffffff');
     if(((u+.5)/.07)**2 + ((v+.3)/.05)**2 < 1) col = hex('#ffffff');
-    if(Y>=LCD.y+68 && Y<LCD.y+84 && (X < bz.x-6 || X >= bz.x+bz.w+6)){
-      let sc = (Y===LCD.y+68 || Y===LCD.y+83) ? hex('#8f99b6') : ((X+Y)%10 < 5 ? SN : SL);
+    if(Y>=LCD.y+52 && Y<LCD.y+62 && (X < bz.x-5 || X >= bz.x+bz.w+5)){
+      let sc = (Y===LCD.y+52 || Y===LCD.y+61) ? hex('#8f99b6') : ((X+Y)%8 < 4 ? SN : SL);
       col = mix(sc, BK, Math.max(0, .55 - I) * .7);
     }
     // fine grain: a few barely-visible specks in the plastic
@@ -1157,29 +1158,29 @@ function buildDevStatic(){
   }
   x.putImageData(img, 0, 0);
   // key ring
-  for(let Y=0;Y<40;Y++) for(let X=ECX-18;X<ECX+19;X++){ if(inside(X,Y)) continue; const e=((X+.5-ECX)/15)**2+((Y+.5-18)/15)**2, e2=((X+.5-ECX)/9.5)**2+((Y+.5-18)/9.5)**2; if(e<=1 && e2>=1){ const lit = (X-ECX) + (Y-18) < -4; x.fillStyle = e>.8||e2<1.2 ? INK : (lit ? '#fbfaf6' : '#d7d2c6'); x.fillRect(X,Y,1,1); } }
+  for(let Y=0;Y<30;Y++) for(let X=ECX-13;X<ECX+14;X++){ if(inside(X,Y)) continue; const e=((X+.5-ECX)/11)**2+((Y+.5-12)/11)**2, e2=((X+.5-ECX)/6.5)**2+((Y+.5-12)/6.5)**2; if(e<=1 && e2>=1){ const lit = (X-ECX) + (Y-12) < -3; x.fillStyle = e>.8||e2<1.2 ? INK : (lit ? '#fbfaf6' : '#d7d2c6'); x.fillRect(X,Y,1,1); } }
   // paw + arched title
-  pixMap(x, ICONS.paw, ECX-4, 52, INK);
+  pixMap(x, ICONS.paw, ECX-4, 38, INK);
   const title = 'CAT BASEBALL CLUB'; x.font = '700 11px Galmuri11, monospace';
-  const ws = [...title].map(ch => Math.ceil(x.measureText(ch).width)+2); const tw = ws.reduce((a,b)=>a+b,0)-2;
+  const ws = [...title].map(ch => Math.ceil(x.measureText(ch).width)+(ch===' '?-1:1)); const tw = ws.reduce((a,b)=>a+b,0)-1;
   let tx = Math.round(ECX - tw/2);
-  [...title].forEach((ch,i)=>{ const cx = tx + ws[i]/2; const y = Math.round(92 + ((cx-ECX)/100)**2*12); crispText(x, ch, tx, y, INK, '700 11px Galmuri11, monospace'); tx += ws[i]; });
+  [...title].forEach((ch,i)=>{ const cx = tx + ws[i]/2; const y = Math.round(71 + ((cx-ECX)/70)**2*5); crispText(x, ch, tx, y, INK, '700 11px Galmuri11, monospace'); tx += ws[i]; });
   // recessed screen bezel
-  pxRRect(x, bz.x, bz.y, bz.w, bz.h, 16, INK);
-  pxRRect(x, bz.x+2, bz.y+2, bz.w-4, bz.h-4, 14, '#d8d3c7');
-  pxRRect(x, bz.x+3, bz.y+3, bz.w-6, bz.h-6, 13, '#c3bdaf');
-  pxRRect(x, bz.x+6, bz.y+6, bz.w-10, bz.h-10, 10, '#b4ae9f');
-  pxRRect(x, bz.x+7, bz.y+7, bz.w-14, bz.h-14, 9, '#c9c4b7');
+  pxRRect(x, bz.x, bz.y, bz.w, bz.h, 12, INK);
+  pxRRect(x, bz.x+2, bz.y+2, bz.w-4, bz.h-4, 10, '#d8d3c7');
+  pxRRect(x, bz.x+3, bz.y+3, bz.w-6, bz.h-6, 9, '#c3bdaf');
+  pxRRect(x, bz.x+5, bz.y+5, bz.w-8, bz.h-8, 7, '#b4ae9f');
+  pxRRect(x, bz.x+6, bz.y+6, bz.w-11, bz.h-11, 6, '#c9c4b7');
   pxRRect(x, LCD.x-3, LCD.y-3, LCD.w+6, LCD.h+6, 5, '#8e887a');
   pxRRect(x, LCD.x-2, LCD.y-2, LCD.w+4, LCD.h+4, 4, INK);
   // button wells (soft shadow on the shell) + labels
-  BTN.forEach(b=>{ pxDisc(x, b.x+2, b.y+5, 18, '#c9c3b5'); pxDisc(x, b.x+1, b.y+3, 17, '#d6d1c5'); });
-  BTN.forEach(b=>{ const w = Math.ceil(x.measureText(b.label).width); crispText(x, b.label, Math.round(b.x - w/2), b.y + 32, INK, '700 11px Galmuri11, monospace'); });
-  pixMap(x, ICONS.paw, ECX-4, 404, INK);
+  BTN.forEach(b=>{ pxDisc(x, b.x+2, b.y+4, 13, '#c9c3b5'); pxDisc(x, b.x+1, b.y+2, 12, '#d6d1c5'); });
+  BTN.forEach(b=>{ const w = Math.ceil(x.measureText(b.label).width); crispText(x, b.label, Math.round(b.x - w/2), b.y + 26, INK, '700 11px Galmuri11, monospace'); });
+  pixMap(x, ICONS.paw, ECX-4, 284, INK);
   devStatic = c;
 }
 function drawButton(b, down){
-  const R = 15, oy = down ? 3 : 0, cx = b.x, cy = b.y + oy;
+  const R = 11, oy = down ? 2 : 0, cx = b.x, cy = b.y + oy;
   if(!down) pxDisc(dctx, cx, b.y+3, R, INK);
   pxDisc(dctx, cx, cy, R, INK);
   const BL = ['#28407e','#34509a','#4461b0','#5876c3','#728fd3','#93acE3','#bfd0f3'];
@@ -1188,7 +1189,29 @@ function drawButton(b, down){
     const u=i/(R-1.6), v=j/(R-1.6), z=Math.sqrt(Math.max(0,1-u*u-v*v)), dot=u*LIGHT[0]+v*LIGHT[1]+z*LIGHT[2];
     const col = ramp(BL.map(hex), .1 + .95*dot - (down?.15:0), cx+i, cy+j); dctx.fillStyle = `rgb(${col})`; dctx.fillRect(cx+i, cy+j, 1, 1);
   }
-  dctx.fillStyle = '#f4f7ff'; dctx.fillRect(cx-7, cy-8, 3, 2); dctx.fillRect(cx-8, cy-6, 2, 2);
+  dctx.fillStyle = '#f4f7ff'; dctx.fillRect(cx-5, cy-6, 2, 2); dctx.fillRect(cx-6, cy-4, 1, 1);
+}
+function miniScene(ts, X, Y){
+  const k = SC.k, gy = Y + Math.round(GROUND*k);
+  dctx.drawImage(isNight() ? BG.night : BG.day, 0, 0, W, H, X, Y, SC.w, SC.h);
+  dctx.save(); dctx.beginPath(); dctx.rect(X, Y, SC.w, SC.h); dctx.clip();
+  let f = 'normal', bob = 0, cx = catX;
+  if(st.sleeping){ f = 'sleep'; bob = Math.floor(ts/1000)%2; }
+  else if(tr){ cx = 58; f = (tr.lastHitT && ts-tr.lastHitT<900) ? 'happy' : 'normal'; }
+  else if(anim && anim.type==='feed'){ f = 'eat'; bob = Math.floor((ts-anim.start)/220)%2; }
+  else if(anim && anim.type==='play'){ f = 'play'; }
+  else if(anim && anim.type==='gift'){ f = 'happy'; }
+  else { f = faceNow(ts); if(walking) bob = -(Math.floor(ts/170)%2); }
+  const fr = frame(f);
+  if(fr){ dctx.fillStyle = 'rgba(44,46,61,.16)'; dctx.fillRect(X+Math.round(cx*k)-12, gy+1, 24, 2); dctx.drawImage(fr, X+Math.round(cx*k)-22, gy-46+bob); }
+  if(tr){
+    if(tr.phase==='pitch'){ const [bx,by,r] = ballAt((ts-tr.start)/tr.dur); pxDisc(dctx, X+Math.round(bx*k), Y+Math.round(by*k), Math.max(1,Math.round(r*.8)), INK); pxDisc(dctx, X+Math.round(bx*k), Y+Math.round(by*k), Math.max(0,Math.round(r*.8)-1), '#ffffff'); }
+    const zp = tr.phase==='pitch' ? (ts-tr.start)/tr.dur : -1; dctx.fillStyle = Math.abs(zp-1)<=GOOD ? '#ffd35a' : 'rgba(255,255,255,.6)';
+    for(let a=0;a<12;a++){ const t=a/12*Math.PI*2; dctx.fillRect(X+Math.round(ZX*k+Math.cos(t)*5), Y+Math.round(ZY*k+Math.sin(t)*5), 1, 1); }
+  }
+  particles.forEach(p=>{ if(p.type!=='crumb' && MAPS[p.type]) drawMap(dctx, MAPS[p.type], X+p.x*k, Y+p.y*k, p.type==='z' && isNight() ? '#f4efdc' : null); });
+  if(st.sleeping && !isNight()){ dctx.fillStyle = 'rgba(30,36,70,.45)'; dctx.fillRect(X, Y, SC.w, SC.h); }
+  dctx.restore();
 }
 function renderDevice(ts){
   if(!devStatic) buildDevStatic();
@@ -1197,39 +1220,36 @@ function renderDevice(ts){
   BTN.forEach(b => drawButton(b, pressed[b.k] && ts - pressed[b.k] < 160));
   const X = LCD.x, Y = LCD.y;
   dctx.fillStyle = '#e8e6dc'; dctx.fillRect(X, Y, LCD.w, LCD.h);
-  // top info row
-  dctx.fillStyle = INK; dctx.font = '11px Galmuri11, monospace';
-  pixMap(dctx, ['.###.','#.#.#','#.#.#','#.#.#','.###.'], X+4, Y+3, INK);
-  const d = new Date(), tstr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  crispText(dctx, tstr, X+103, Y+11, INK);
-  dctx.fillRect(X+140, Y+3, 13, 1); dctx.fillRect(X+140, Y+8, 13, 1); dctx.fillRect(X+140, Y+3, 1, 6); dctx.fillRect(X+152, Y+3, 1, 6); dctx.fillRect(X+153, Y+5, 1, 2);
-  for(let i=0;i<3;i++) dctx.fillRect(X+142+i*3, Y+5, 2, 2);
+  // top row: ball, clock, battery (12px)
+  pixMap(dctx, ['.###.','#.#.#','#.#.#','#.#.#','.###.'], X+3, Y+4, INK);
+  const d = new Date(); crispText(dctx, `${pad2(d.getHours())}:${pad2(d.getMinutes())}`, X+57, Y+11, INK);
+  dctx.fillStyle = INK; dctx.fillRect(X+96, Y+4, 12, 1); dctx.fillRect(X+96, Y+8, 12, 1); dctx.fillRect(X+96, Y+4, 1, 5); dctx.fillRect(X+107, Y+4, 1, 5); dctx.fillRect(X+108, Y+5, 1, 3);
+  for(let i=0;i<3;i++) dctx.fillRect(X+98+i*3, Y+6, 2, 1);
   dctx.fillRect(X, Y+12, LCD.w, 1);
-  // game scene
-  dctx.drawImage(cv, X, Y+13);
-  dctx.fillStyle = INK; dctx.fillRect(X, Y+133, LCD.w, 1);
-  // status row: happiness hearts + level
-  for(let i=0;i<5;i++) pixMap(dctx, ['.#.#.','#####','#####','.###.','..#..'], X+4+i*8, Y+137, st.happy >= i*20+10 ? '#d9444f' : '#b6b2a6');
-  const mini = [['hunger',46],['energy',78],['clean',110]];
-  mini.forEach(([k,ox])=>{ const on = Math.round(st[k]/20); for(let i=0;i<5;i++){ dctx.fillStyle = i<on ? (st[k]<25 ? '#c64f5b' : INK) : '#b6b2a6'; dctx.fillRect(X+ox+i*5, Y+139, 3, 3); } });
-  crispText(dctx, `LV${st.level}`, X+138, Y+145, INK);
-  dctx.fillRect(X, Y+146, LCD.w, 1);
-  // icon row
+  // scene
+  miniScene(ts, X, Y+13);
+  const sy = Y+13+SC.h; dctx.fillStyle = INK; dctx.fillRect(X, sy, LCD.w, 1);
+  // status row (10px): hearts + three tiny gauges
+  for(let i=0;i<5;i++) pixMap(dctx, ['.#.#.','#####','.###.','..#..'], X+3+i*7, sy+3, st.happy >= i*20+10 ? '#d9444f' : '#b6b2a6');
+  [['hunger',42],['energy',66],['clean',90]].forEach(([k,ox])=>{ const on = Math.round(st[k]/20); for(let i=0;i<5;i++){ dctx.fillStyle = i<on ? (st[k]<25 ? '#c64f5b' : INK) : '#b6b2a6'; dctx.fillRect(X+ox+i*4, sy+4, 3, 3); } });
+  dctx.fillStyle = INK; dctx.fillRect(X, sy+10, LCD.w, 1);
+  // icon row (12px)
+  const iy = sy+11;
   for(let i=0;i<5;i++){
-    const cx = X + i*32; if(i) dctx.fillRect(cx, Y+147, 1, 13);
-    const ic = ICONS[TOOL_IC[CELLS[i]] || CELLS[i]]; const w = ic[0].length, h = ic.length;
-    pixMap(dctx, ic, cx + 16 - Math.floor(w/2), Y + 147 + Math.floor((13-h)/2) + (h>11?0:0), INK);
+    const cx = Math.round(X + i*CW); if(i) dctx.fillRect(cx, iy, 1, LCD.h-(iy-Y));
+    const ic = ICONS[TOOL_IC[CELLS[i]] || CELLS[i]], w = ic[0].length, h = ic.length;
+    pixMap(dctx, ic, Math.round(cx + CW/2 - w/2), iy + Math.max(0, Math.floor((LCD.h-(iy-Y)-h)/2)), INK);
   }
-  // overlays on the scene
+  // overlays
   dctx.font = '11px Galmuri11, monospace';
   if(pipMsg && ts < pipMsg.until && !tr){
-    let t = pipMsg.text; while(dctx.measureText(t).width > 146 && t.length > 2) t = t.slice(0,-2)+'…';
-    const w = Math.ceil(dctx.measureText(t).width) + 8;
-    dctx.fillStyle = INK; dctx.fillRect(X+3, Y+16, w+2, 15); dctx.fillStyle = '#fff'; dctx.fillRect(X+4, Y+17, w, 13);
-    dctx.fillStyle = INK; dctx.fillRect(X+10, Y+31, 3, 1); dctx.fillRect(X+11, Y+32, 1, 1); crispText(dctx, t, X+8, Y+28, INK);
+    let t = pipMsg.text; while(dctx.measureText(t).width > 96 && t.length > 2) t = t.slice(0,-2)+'…';
+    const w = Math.ceil(dctx.measureText(t).width) + 6;
+    dctx.fillStyle = INK; dctx.fillRect(X+2, Y+15, w+2, 15); dctx.fillStyle = '#fff'; dctx.fillRect(X+3, Y+16, w, 13);
+    crispText(dctx, t, X+6, Y+27, INK);
   }
-  if(pipBanner && ts < pipBanner.until){ const w = Math.ceil(dctx.measureText(pipBanner.text).width) + 8; dctx.fillStyle = INK; dctx.fillRect(X+LCD.w-w-4, Y+17, w, 14); crispText(dctx, pipBanner.text, X+LCD.w-w, Y+28, '#ffffff'); }
-  if(tr){ const t = `${Math.min(tr.pitch+1,tr.total)}/${tr.total}구 ${tr.hits}안타`; const w = Math.ceil(dctx.measureText(t).width)+6; dctx.fillStyle = INK; dctx.fillRect(X+2, Y+118, w, 13); crispText(dctx, t, X+5, Y+129, '#ffffff'); }
+  if(pipBanner && ts < pipBanner.until){ const w = Math.ceil(dctx.measureText(pipBanner.text).width) + 6; dctx.fillStyle = INK; dctx.fillRect(X+LCD.w-w-2, Y+15, w, 14); crispText(dctx, pipBanner.text, X+LCD.w-w+1, Y+26, '#ffffff'); }
+  if(tr){ const t = `${Math.min(tr.pitch+1,tr.total)}/${tr.total} ${tr.hits}H`; const w = Math.ceil(dctx.measureText(t).width)+6; dctx.fillStyle = INK; dctx.fillRect(X+2, Y+13+SC.h-14, w, 13); crispText(dctx, t, X+5, Y+13+SC.h-4, '#ffffff'); }
 }
 function renderPipStats(){}
 function pipThud(){}
@@ -1244,7 +1264,7 @@ async function openPip(){
   try{
     try{ await document.fonts.load('700 11px Galmuri11'); await document.fonts.load('11px Galmuri11'); }catch(e){}
     devStatic = null;
-    const w = await documentPictureInPicture.requestWindow({width: DW+16, height: DH+16});
+    const w = await documentPictureInPicture.requestWindow({width: DW+6, height: DH+6});
     pip = w;
     const css = w.document.createElement('style');
     css.textContent = 'html,body{margin:0;height:100%;background:#ecebe4;overflow:hidden}body{display:flex;align-items:center;justify-content:center}#m-dev{display:block;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer;touch-action:manipulation}';
@@ -1254,10 +1274,10 @@ async function openPip(){
     dev.addEventListener('pointerdown', e=>{
       const r = dev.getBoundingClientRect(), px = (e.clientX-r.left)/r.width*DW, py = (e.clientY-r.top)/r.height*DH;
       const b = BTN.find(b => (px-b.x)**2 + (py-b.y)**2 <= 16*16); if(b){ e.preventDefault(); pipPress(b.k); return; }
-      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+147 && py<LCD.y+LCD.h){ const k = CELLS[Math.floor((px-LCD.x)/32)]; pressed[k]=performance.now(); if(tr){ swing(); return; } act(k); return; }
-      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13 && py<LCD.y+133){
+      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13+SC.h+11 && py<LCD.y+LCD.h){ const k = CELLS[Math.min(4,Math.floor((px-LCD.x)/CW))]; pressed[k]=performance.now(); if(tr){ swing(); return; } act(k); return; }
+      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13 && py<LCD.y+13+SC.h){
         if(tr){ e.preventDefault(); swing(); return; }
-        const gx = px-LCD.x, gy = py-LCD.y-13; if(Math.abs(gx-catX) < 24 && gy > GROUND-92 && gy < GROUND+3) act('pet');
+        const gx = (px-LCD.x)/SC.k, gy = (py-LCD.y-13)/SC.k; if(Math.abs(gx-catX) < 24 && gy > GROUND-92 && gy < GROUND+3) act('pet');
       }
     });
     w.document.addEventListener('keydown', e=>{ if(tr && (e.code==='Space'||e.key===' ')){ e.preventDefault(); swing(); } });
