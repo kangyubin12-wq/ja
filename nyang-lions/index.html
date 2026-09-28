@@ -123,7 +123,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .moods{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .moods figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:4px;border:2px solid transparent}
 .moods figure.cur{border-color:var(--ink);background:#fff}
-.moods canvas{width:100%;max-width:64px;aspect-ratio:1;image-rendering:pixelated}
+.moods canvas{width:100%;max-width:64px;aspect-ratio:64/72;image-rendering:pixelated}
 .moods figcaption{font-size:11px;color:var(--muted)}
 .moods figure.cur figcaption{color:var(--ink);font-weight:700}
 .moods-note{margin:8px 0 0;font-size:12px;color:var(--muted)}
@@ -286,68 +286,85 @@ function toCanvas(G){
   return c;
 }
 
-/* ---- the cat (sitting, 56x56, centre x=28, feet on row 54) ---- */
+/* ---- the cat (sitting upright, 56x66, centre x=28, feet on row 64) ---- */
+const inFluff = (cx,cy,rx,ry,amp,n,ranges) => (x,y) => {
+  const u=(x-cx)/rx, v=(y-cy)/ry, d=Math.hypot(u,v), a=Math.atan2(v,u);
+  let r = 1;
+  for(const [lo,hi] of ranges){ if(a>=lo && a<=hi){ const t=(a-lo)/(hi-lo)*n, f=t-Math.floor(t); r = 1 + amp*Math.pow(1-Math.abs(2*f-1),1.6); } }
+  return d <= r; };
 function drawFace(G, f, hd){
   const m = (x,y,c) => { G.set(x,y+hd,c); G.set(55-x,y+hd,c); };
-  const eyesOpen = () => { m(18,30,C.e); m(19,30,C.e); for(let x=17;x<=20;x++){ m(x,31,C.e); m(x,32,C.e); } m(18,33,C.e); m(19,33,C.e); G.set(19,31+hd,C.w); G.set(37,31+hd,C.w); };
-  const eyesClosed = () => { m(16,31,C.e); m(17,32,C.e); m(18,32,C.e); m(19,32,C.e); m(20,31,C.e); };
-  const eyesHappy = () => { m(16,33,C.e); m(17,32,C.e); m(18,31,C.e); m(19,32,C.e); m(20,33,C.e); };
-  const nose = () => { G.set(27,35+hd,C.pk2); G.set(28,35+hd,C.pk2); };
-  const mouthW = () => { m(25,36,C.o); m(26,37,C.o); m(27,36,C.o); };
-  const mouthOpen = () => { m(26,36,C.o); m(27,36,C.o); m(25,37,C.o); m(26,37,C.r); m(27,37,C.r); m(26,38,C.o); m(27,38,C.o); };
-  const mouthFlat = () => { m(26,37,C.o); m(27,37,C.o); };
-  const mouthO = () => { m(27,36,C.o); m(26,37,C.o); m(27,37,C.r); m(27,38,C.o); };
-  const mouthFrown = () => { m(25,38,C.o); m(26,37,C.o); m(27,37,C.o); };
+  const eyesOpen = () => {
+    m(20,25,C.e); m(21,25,C.e);
+    for(let y=26;y<=29;y++) for(let x=19;x<=22;x++) m(x,y,C.e);
+    m(20,30,C.e); m(21,30,C.e);
+    [[20,26],[21,26],[20,27]].forEach(([x,y])=>G.set(x,y+hd,C.w));
+    [[34,26],[35,26],[34,27]].forEach(([x,y])=>G.set(x,y+hd,C.w));
+  };
+  const eyesClosed = () => { m(18,28,C.e); m(19,29,C.e); m(20,29,C.e); m(21,29,C.e); m(22,29,C.e); m(23,28,C.e); };
+  const eyesHappy = () => { m(18,29,C.e); m(19,28,C.e); m(20,27,C.e); m(21,27,C.e); m(22,28,C.e); m(23,29,C.e); };
+  const nose = () => { G.set(27,31+hd,C.pk2); G.set(28,31+hd,C.pk2); };
+  const mouthW = () => { m(25,32,C.o); m(26,33,C.o); m(27,32,C.o); };
+  const mouthOpen = () => { m(26,32,C.o); m(27,32,C.o); m(25,33,C.o); m(26,33,C.r); m(27,33,C.r); m(26,34,C.o); m(27,34,C.o); };
+  const mouthFlat = () => { m(26,33,C.o); m(27,33,C.o); };
+  const mouthO = () => { m(27,32,C.o); m(26,33,C.o); m(27,33,C.r); m(27,34,C.o); };
+  const mouthFrown = () => { m(25,34,C.o); m(26,33,C.o); m(27,33,C.o); };
   switch(f){
     case 'happy': eyesHappy(); nose(); mouthOpen(); break;
     case 'closed': case 'blink': eyesClosed(); nose(); mouthW(); break;
     case 'eat': eyesClosed(); nose(); mouthOpen(); break;
     case 'sleep': eyesClosed(); nose(); mouthFlat(); break;
     case 'tired':
-      for(let x=17;x<=20;x++) m(x,31,C.o);
-      m(18,32,C.e); m(19,32,C.e); m(18,33,C.e); m(19,33,C.e);
+      for(let x=18;x<=23;x++) m(x,27,C.o);
+      for(let y=28;y<=29;y++) for(let x=19;x<=22;x++) m(x,y,C.e); m(20,30,C.e); m(21,30,C.e);
       nose(); mouthFlat();
-      [[47,27],[47,28],[46,28],[47,29],[46,29]].forEach(([x,y])=>G.set(x,y+hd,C.d));
+      [[43,22],[43,23],[42,23],[43,24],[42,24]].forEach(([x,y])=>G.set(x,y+hd,C.d));
       break;
-    case 'hungry': eyesOpen(); nose(); mouthO(); G.set(30,38+hd,C.d); G.set(30,39+hd,C.d); G.set(31,39+hd,C.d); break;
+    case 'hungry': eyesOpen(); nose(); mouthO(); G.set(30,34+hd,C.d); G.set(30,35+hd,C.d); break;
     case 'angry':
-      eyesOpen(); m(17,28,C.o); m(18,28,C.o); m(19,29,C.o); m(20,29,C.o); nose(); mouthFrown();
-      [[38,9],[39,9],[38,10],[42,9],[41,9],[42,10],[38,13],[38,12],[39,13],[42,13],[41,13],[42,12]].forEach(([x,y])=>G.set(x,y+hd,C.r));
+      eyesOpen(); m(18,23,C.o); m(19,23,C.o); m(20,24,C.o); m(21,24,C.o); m(22,25,C.o); nose(); mouthFrown();
+      [[38,6],[39,6],[38,7],[42,6],[41,6],[42,7],[38,10],[38,9],[39,10],[42,10],[41,10],[42,9]].forEach(([x,y])=>G.set(x,y+hd,C.r));
       break;
-    case 'dirty': eyesOpen(); nose(); mouthFlat(); m(25,38,C.o); break;
+    case 'dirty': eyesOpen(); nose(); mouthFlat(); m(25,34,C.o); break;
     default: eyesOpen(); nose(); mouthW();
   }
 }
 function buildSit({face='normal', hd=0, pose='sit', dirty=false}={}){
-  const G = new Grid(56,56);
-  paint(G, inPath([[39,51],[45,48.5],[48.5,44],[48.5,39.5],[46,36.5]],3.2,2.6), shadeEll(46,44,6,9,FUR));
-  paint(G, any(inEll(28,47.5,12,8), inEll(19,51.2,6,3.8), inEll(37,51.2,6,3.8)), shadeEll(28,46,14,9,FUR));
-  if(pose!=='bat'){
-    paint(G, inEll(23,52.6,3.6,2.4), shadeEll(23,52,4,3,FUR));
-    paint(G, inEll(33,52.6,3.6,2.4), shadeEll(33,52,4,3,FUR));
-    [21,24,31,34].forEach(x=>G.set(x,54,C.o));
-  }
-  // ears (outside the cap)
-  paint(G, inTri(7.5,6+hd,8.5,23+hd,23,15.5+hd), shadeEll(14,16+hd,10,10,FUR));
-  paint(G, inTri(48.5,6+hd,47.5,23+hd,33,15.5+hd), shadeEll(42,16+hd,10,10,FUR));
-  paint(G, inTri(9.6,10+hd,10.2,20.5+hd,19,16+hd), flat(C.pk), {noOutline:true});
-  paint(G, inTri(46.4,10+hd,45.8,20.5+hd,37,16+hd), flat(C.pk), {noOutline:true});
-  // big round head
-  paint(G, inEll(28,31+hd,21.2,15.6), shadeEll(28,30+hd,22,17,FUR));
-  paint(G, inEll(13.5,37+hd,3.8,2.1), (x,y)=> (x<13.5 && y<37+hd) ? C.pkl : C.pk, {noOutline:true});
-  paint(G, inEll(42.5,37+hd,3.8,2.1), (x,y)=> (x<42.5 && y<37+hd) ? C.pkl : C.pk, {noOutline:true});
-  // cap dome
-  paint(G, both(inEll(28,17.5+hd,13.8,11.2), (x,y)=> y<=21.5+hd), shadeEll(24,13+hd,15,11,CAP));
-  for(let y=9;y<=20;y++){ const off=Math.round(3+4*Math.sin((y-9)/11*1.35)); [23-off,32+off].forEach(x=>{ const v=G.get(x,y+hd); if(v && v!==C.o) G.set(x,y+hd,C.n2); }); }
-  G.set(27,6+hd,C.o); G.set(28,6+hd,C.o); G.set(27,7+hd,C.n0); G.set(28,7+hd,C.n1);
-  paint(G, inEll(28,15.2+hd,2.9,1.9), flat(C.f0), {noOutline:true});
-  [[24,12],[26,11],[29,11],[31,12]].forEach(([x,y])=>G.set(x,y+hd,C.f0));
-  // brim (bill), wider than the dome
-  paint(G, both(inEll(27.5,21.5+hd,18,4.3), (x,y)=> y>=20+hd), shadeEll(20,20+hd,20,6,[C.n1,C.n2,C.n3,C.n3]));
-  for(let x=12;x<=43;x++){ const v=G.get(x,21+hd); if(v===C.n2||v===C.n3) G.set(x,21+hd,C.n1); }
-  for(let x=9;x<=46;x++){ const v=G.get(x,26+hd); if(v===C.f0||v===C.w) G.set(x,26+hd,C.f2); }
+  const G = new Grid(56,66);
+  const L = Math.PI;
+  // tail
+  paint(G, inPath([[38,61],[44,58.5],[48,53],[48.5,47.5],[46.5,43.5]],3.1,2.5), shadeEll(46,53,6,11,FUR));
+  // haunches + torso
+  paint(G, any(inEll(18.5,58,6.2,5.8), inEll(37.5,58,6.2,5.8)), shadeEll(28,56,16,9,FUR));
+  paint(G, any(inFluff(28,49.5,13.6,12.8,.08,3,[[-.5,.7],[L-.7,L+.5]]), inEll(28,40.5,14.5,5.5)), shadeEll(28,48,15,14,FUR));
+  // chest fluff under the chin
+  paint(G, inFluff(28,43,8.5,7,.28,5,[[.2,L-.2]]), (x,y)=> y<42 ? C.w : C.f0, {line:C.f2});
+  // front legs + paws
+  paint(G, inPath([[23.4,55.5],[23.2,61]],3.2,3.3), shadeEll(23,58,5,6,FUR));
+  paint(G, inPath([[32.6,55.5],[32.8,61]],3.2,3.3), shadeEll(33,58,5,6,FUR));
+  paint(G, inEll(23,62.3,4,2.6), shadeEll(23,62,4,3,FUR));
+  paint(G, inEll(33,62.3,4,2.6), shadeEll(33,62,4,3,FUR));
+  [21,25,31,35].forEach(x=>G.set(x,63,C.f3));
+  // ears peeking out beside the cap
+  paint(G, inTri(8,6.5+hd,12.5,23+hd,22,15+hd), shadeEll(14,15+hd,8,9,FUR));
+  paint(G, inTri(48,6.5+hd,43.5,23+hd,34,15+hd), shadeEll(42,15+hd,8,9,FUR));
+  paint(G, inTri(10,10+hd,13.4,19.5+hd,18.8,15.4+hd), flat(C.pk), {noOutline:true});
+  paint(G, inTri(46,10+hd,42.6,19.5+hd,37.2,15.4+hd), flat(C.pk), {noOutline:true});
+  // head, fluffy cheeks
+  paint(G, inFluff(28,26.5+hd,16.4,12.8,.16,2,[[.1,.95],[L-.95,L-.1]]), shadeEll(28,25+hd,18,14,FUR));
+  paint(G, inEll(15.5,31.5+hd,3.1,1.7), (x,y)=> (x<15.5 && y<31.5+hd) ? C.pkl : C.pk, {noOutline:true});
+  paint(G, inEll(40.5,31.5+hd,3.1,1.7), (x,y)=> (x<40.5 && y<31.5+hd) ? C.pkl : C.pk, {noOutline:true});
+  // cap: dome sits on the crown, bill points forward-right
+  paint(G, both(inEll(27,13.5+hd,12.6,9.6), (x,y)=> y<=17.2+hd), shadeEll(23,10+hd,14,10,CAP));
+  for(let y=6;y<=16;y++){ const off=Math.round(2+4*Math.sin((y-6)/10*1.35)); [22-off,32+off].forEach(x=>{ const v=G.get(x,y+hd); if(v && v!==C.o) G.set(x,y+hd,C.n2); }); }
+  G.set(26,3+hd,C.o); G.set(27,3+hd,C.o); G.set(26,4+hd,C.n0); G.set(27,4+hd,C.n1);
+  paint(G, both(inEll(30.5,17.3+hd,14.5,3.4), (x,y)=> y>=15.8+hd), shadeEll(24,16+hd,16,5,[C.n1,C.n2,C.n3,C.n3]));
+  for(let x=17;x<=44;x++){ const v=G.get(x,16+hd); if(v===C.n2||v===C.n3) G.set(x,16+hd,C.n1); }
+  for(let x=13;x<=44;x++){ const v=G.get(x,21+hd); if(v===C.f0||v===C.w) G.set(x,21+hd,C.f1); }
+  paint(G, inEll(27,11.6+hd,2.6,1.8), flat(C.f0), {noOutline:true});
+  [[23,9],[25,8],[28,8],[30,9]].forEach(([x,y])=>G.set(x,y+hd,C.f0));
   drawFace(G, face, hd);
-  if(dirty) [[11,42],[13,43],[40,50],[41,51],[20,50],[44,33],[15,28],[16,28],[36,44]].forEach(([x,y])=>{ const v=G.get(x,y+ (y<46?hd:0)); if(v&&v!==C.o&&v!==C.e&&v!==C.pk&&v!==C.pkl) G.set(x,y+(y<46?hd:0),C.g); });
+  if(dirty) [[13,33],[14,34],[40,55],[41,56],[21,56],[34,50],[42,29],[17,44],[36,44]].forEach(([x,y])=>{ const yy=y+(y<38?hd:0), v=G.get(x,yy); if(v&&v!==C.o&&v!==C.e&&v!==C.pk&&v!==C.pkl) G.set(x,yy,C.g); });
   return G;
 }
 /* ---- sleeping loaf, 64x44, feet on row 41 ---- */
@@ -569,7 +586,7 @@ const LINES = {
 function spawn(type,x,y,n=1,opt={}){
   for(let i=0;i<n;i++) particles.push({type, x:x+rand(-8,8), y:y+rand(-3,3), vx:opt.vx??rand(-.15,.15), vy:opt.vy??rand(-.45,-.2), life:opt.life??rand(900,1400), max:opt.life??1400, g:opt.g||0});
 }
-function drawCat(x, sprite, bob=0, h=54, cx=28){
+function drawCat(x, sprite, bob=0, h=64, cx=28){
   pxEll(ctx, x, GROUND+.5, 16, 2.2, 'rgba(44,46,61,.16)');
   ctx.drawImage(sprite, Math.round(x)-cx, GROUND-h+bob);
 }
@@ -611,14 +628,14 @@ function drawIdle(ts, night){
   drawCat(catX, catSpr(face,{dirty}), bob);
   if(anim && anim.type==='pet'){
     const k = Math.abs(Math.sin((ts-anim.start)/130));
-    ctx.drawImage(HAND(), Math.round(catX)-11, GROUND-62 + Math.round(k*4));
+    ctx.drawImage(HAND(), Math.round(catX)-12, GROUND-70 + Math.round(k*4));
   }
   if(anim && anim.type==='brush'){
     const q = (ts-anim.start)/anim.dur;
     ctx.drawImage(COMB(), Math.round(catX - 20 + (Math.sin(q*Math.PI*5)*.5+.5)*24), GROUND-24);
   }
   if(!anim && face==='hungry'){
-    const bx = Math.round(catX)+18, by = GROUND-66;
+    const bx = Math.round(catX)+16, by = GROUND-74;
     ctx.fillStyle=C.o; pxEll(ctx,bx+2,by+16,1.6,1.6,C.o); pxEll(ctx,bx+6,by+11,2.3,2.3,C.o);
     pxEll(ctx,bx+13,by+3,9,5.5,C.o); pxEll(ctx,bx+13,by+3,8,4.5,'#ffffff'); pxEll(ctx,bx+6,by+11,1.3,1.3,'#ffffff');
     drawMap(ctx, MAPS.fish, bx+10, by+2);
@@ -631,9 +648,9 @@ function drawTraining(ts){
   pxEll(ctx,100,86,11,2.2,'#cfc6b1'); ctx.fillStyle='#f7f5ee'; ctx.fillRect(98,85,4,1);
   const swinging = tr.swingT && ts-tr.swingT < 220;
   drawCat(cx, catSpr(faceNow(ts),{pose:'bat',dirty}));
-  const L = cx-28, T = GROUND-54;
-  if(swinging) ctx.drawImage(BAT_SW(), L+33, T+36);
-  else ctx.drawImage(BAT_UP(), L+35, T+11);
+  const L = cx-28, T = GROUND-64;
+  if(swinging) ctx.drawImage(BAT_SW(), L+33, T+42);
+  else ctx.drawImage(BAT_UP(), L+34, T+18);
   if(tr.phase==='pitch'){
     const p = (ts-tr.start)/tr.dur, bx = 100 - p*6, by = 84 + p*22, r = .9 + p*2.2;
     pxEll(ctx,bx,by,r+1,r+1,C.o); pxEll(ctx,bx,by,r,r,'#ffffff');
@@ -657,8 +674,8 @@ function update(ts, dt){
   if(st.sleeping && ts-lastZ > 1100){ lastZ = ts; particles.push({type:'z',x:catX+4,y:GROUND-40,vx:.09,vy:-.17,life:1700,max:1700,g:0}); }
   if(!tr && !st.sleeping && !anim && ts-lastMoodFx > 1500){
     lastMoodFx = ts; const m = baseMood();
-    if(m==='happy') spawn('spark', catX+rand(-20,20), GROUND-50, 1, {life:900});
-    if(m==='tired') particles.push({type:'z',x:catX+14,y:GROUND-58,vx:.06,vy:-.12,life:1400,max:1400,g:0});
+    if(m==='happy') spawn('spark', catX+rand(-20,20), GROUND-58, 1, {life:900});
+    if(m==='tired') particles.push({type:'z',x:catX+14,y:GROUND-66,vx:.06,vy:-.12,life:1400,max:1400,g:0});
   }
   for(const p of particles){ p.x += p.vx*dt/16; p.y += p.vy*dt/16; p.vy += p.g*dt/16; p.life -= dt; }
   particles = particles.filter(p=>p.life>0);
@@ -694,15 +711,15 @@ function act(kind){
     case 'play':
       if(st.energy < 15){ say('힘들어… 좀 쉬고 싶어'); break; }
       bump('happy',14); bump('energy',-10); bump('hunger',-6); bump('clean',-6); gainXp(3);
-      startAnim('play',1800); setTimeout(()=>spawn('heart',catX,GROUND-58,3),1300);
+      startAnim('play',1800); setTimeout(()=>spawn('heart',catX,GROUND-66,3),1300);
       say(pick(['공이다! 잡았다냥','한 번 더 던져 줘!','나이스 캐치!'])); break;
     case 'pet':
-      bump('happy',7); startAnim('pet',1400); spawn('heart',catX,GROUND-60,4);
+      bump('happy',7); startAnim('pet',1400); spawn('heart',catX,GROUND-68,4);
       say(pick(['골골골…','거기 좋아!','냐앙~','헤헤, 한 번 더'])); break;
     case 'brush':
       if(st.clean >= 95){ say('이미 반짝반짝해!'); break; }
       bump('clean',40); bump('happy',3); startAnim('brush',1700);
-      spawn('spark',catX,GROUND-40,4); spawn('bubble',catX,GROUND-30,3);
+      spawn('spark',catX,GROUND-46,4); spawn('bubble',catX,GROUND-34,3);
       say(pick(['반짝반짝, 유니폼 준비 끝','털 정리 완료!','시원하다냥'])); break;
     case 'sleep':
       if(st.sleeping){ st.sleeping=false; say('잘 잤다! 몸이 가벼워'); }
@@ -789,14 +806,14 @@ const MOODS = [['normal','기본'],['happy','신남'],['hungry','배고픔'],['t
 const moodsEl = $('#moods');
 MOODS.forEach(([k,label])=>{
   const fig = document.createElement('figure'); fig.dataset.k = k;
-  const c = document.createElement('canvas'); c.width=64; c.height=64;
-  const x = c.getContext('2d'); x.fillStyle='#e9ebe8'; x.fillRect(0,0,64,64);
-  x.fillStyle='#dfe3d8'; x.fillRect(0,50,64,14);
-  if(k==='sleep') x.drawImage(sleepSpr(), 0, 16); else x.drawImage(catSpr(k), 4, 5);
+  const c = document.createElement('canvas'); c.width=64; c.height=72;
+  const x = c.getContext('2d'); x.fillStyle='#e9ebe8'; x.fillRect(0,0,64,72);
+  x.fillStyle='#dfe3d8'; x.fillRect(0,60,64,12);
+  if(k==='sleep') x.drawImage(sleepSpr(), 0, 24); else x.drawImage(catSpr(k), 4, 2);
   fig.appendChild(c); const cap = document.createElement('figcaption'); cap.textContent = label; fig.appendChild(cap);
   moodsEl.appendChild(fig);
 });
-{ const d = $('#dream').getContext('2d'); d.drawImage(catSpr('happy'), 4, 2, 48, 44, 0, 0, 48, 44); }
+{ const d = $('#dream').getContext('2d'); d.drawImage(catSpr('happy'), 4, 0, 48, 44, 0, 0, 48, 44); }
 
 const avatar = $('#avatar').getContext('2d');
 let lastAvatarKey = '';
@@ -827,7 +844,7 @@ function renderStats(){
   if(key !== lastAvatarKey){
     lastAvatarKey = key;
     avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,48,44);
-    avatar.drawImage(m==='sleep' ? catSpr('closed') : catSpr(m,{dirty:st.clean<25}), 4, 2, 48, 44, 0, 0, 48, 44);
+    avatar.drawImage(m==='sleep' ? catSpr('closed') : catSpr(m,{dirty:st.clean<25}), 4, 0, 48, 44, 0, 0, 48, 44);
   }
 }
 function renderProfile(){
@@ -856,7 +873,7 @@ $('#name-input').addEventListener('change', e=>{
 $('#screen').addEventListener('pointerdown', e=>{
   if(tr){ e.preventDefault(); swing(); return; }
   const r = cv.getBoundingClientRect(); const x = (e.clientX-r.left)/r.width*W, y = (e.clientY-r.top)/r.height*H;
-  if(Math.abs(x-catX) < 22 && y > GROUND-56 && y < GROUND+3) act('pet');
+  if(Math.abs(x-catX) < 22 && y > GROUND-66 && y < GROUND+3) act('pet');
 });
 $('#swing-btn').addEventListener('pointerdown', e=>{ e.preventDefault(); swing(); });
 $('#swing-btn').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); swing(); } });
