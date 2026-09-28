@@ -1255,16 +1255,19 @@ function renderPipStats(){}
 function pipThud(){}
 function pipPress(k){ pressed[k] = performance.now(); if(tr){ swing(); return; } act(k); }
 function fitPip(){
-  if(!pip) return; const W2 = pip.innerWidth, H2 = pip.innerHeight;
-  const k = Math.max(1, Math.min(Math.floor((W2-8)/DW), Math.floor((H2-8)/DH)));
-  const c = pip.document.querySelector('#m-dev'); c.style.width = DW*k+'px'; c.style.height = DH*k+'px';
+  if(!pip) return;
+  /* size in real screen pixels: 1 art pixel = 1 (or 2 on retina) screen pixels, so it stays small and crisp at 125%/150% Windows scaling */
+  const dpr = pip.devicePixelRatio || 1, base = dpr >= 2 ? Math.floor(dpr) : 1;
+  const fitW = Math.floor((pip.innerWidth-4)*dpr/DW), fitH = Math.floor((pip.innerHeight-4)*dpr/DH);
+  const k = Math.max(base, Math.min(fitW, fitH));
+  const c = pip.document.querySelector('#m-dev'); c.style.width = (DW*k/dpr)+'px'; c.style.height = (DH*k/dpr)+'px';
 }
 async function openPip(){
   if(pip){ pip.focus && pip.focus(); return; }
   try{
     try{ await document.fonts.load('700 11px Galmuri11'); await document.fonts.load('11px Galmuri11'); }catch(e){}
     devStatic = null;
-    const w = await documentPictureInPicture.requestWindow({width: DW+6, height: DH+6});
+    const w = await documentPictureInPicture.requestWindow({width: Math.ceil(DW*(devicePixelRatio>=2?Math.floor(devicePixelRatio):1)/devicePixelRatio)+4, height: Math.ceil(DH*(devicePixelRatio>=2?Math.floor(devicePixelRatio):1)/devicePixelRatio)+4});
     pip = w;
     const css = w.document.createElement('style');
     css.textContent = 'html,body{margin:0;height:100%;background:#ecebe4;overflow:hidden}body{display:flex;align-items:center;justify-content:center}#m-dev{display:block;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer;touch-action:manipulation}';
