@@ -1,1 +1,11 @@
-{"version":"1.1.0","note":"꾹꾹이즈로 이름 변경, 씻기 버튼, 모자 줄무늬·민트·남색, 체력 천천히 닳게","files":["index.html","cat-sprites.png","main.js","preload.js","package.json"]}
+{
+  "version": "1.1.1",
+  "note": "모자 색에 버건디 추가",
+  "files": [
+    "index.html",
+    "cat-sprites.png",
+    "main.js",
+    "preload.js",
+    "package.json"
+  ]
+}
