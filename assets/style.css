@@ -166,8 +166,8 @@ b{font-weight:700}
 .ad:empty{display:none}
 /* ---------- analog layer: grain, dither shadows, ink ---------- */
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;mix-blend-mode:multiply;opacity:.55;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .38 0 0 0 1.6 -.72'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .16 0 0 0 0 .38 0 0 0 .9 -.38'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E")}
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .12 0 0 0 0 .13 0 0 0 1.6 -.72'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .12 0 0 0 0 .13 0 0 0 .7 -.34'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E")}
 .device,.pxbox{box-shadow:0 -6px 0 0 var(--ink),0 6px 0 0 var(--ink),-6px 0 0 0 var(--ink),6px 0 0 0 var(--ink)}
 .pxbox{box-shadow:0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink)}
 .device::after,.pxbox::after{content:"";position:absolute;inset:0;transform:translate(14px,14px);z-index:-1;pointer-events:none;
@@ -195,5 +195,23 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;mi
 .adslot{border-color:var(--ink)}
 .grill i{background:var(--ink);opacity:.35}
 .device::before{background:repeating-conic-gradient(var(--ink) 0 25%,transparent 0 50%) 0 0/2px 2px;opacity:.5}
+/* ---------- v3: muted desk background, continuous outlines ---------- */
+:root{--page:#A2A5A6;--page-dot:#939697}
+.device{border:6px solid var(--ink);box-shadow:none;margin:0}
+.device::after{inset:-6px}
+.pxbox{border:4px solid var(--ink);box-shadow:none;margin:0}
+.pxbox::after{inset:-4px}
+.screen{border:4px solid var(--ink);margin:0;box-shadow:inset 6px 6px 0 0 var(--lcd-line)}
+.qbox,.meters{border:3px solid var(--ink);box-shadow:none;margin:0}
+.pbtn{border:4px solid var(--ink);margin:0;box-shadow:inset -4px -4px 0 0 var(--shell-dk),5px 5px 0 0 var(--ink)}
+.pbtn.red{box-shadow:inset -4px -4px 0 0 var(--ink-dk),5px 5px 0 0 var(--ink)}
+.pbtn:active,.pbtn.pressed{transform:translate(5px,5px);box-shadow:inset -4px -4px 0 0 var(--shell-dk)}
+.pbtn.red:active,.pbtn.red.pressed{box-shadow:inset -4px -4px 0 0 var(--ink-dk)}
+.likert .pbtn{width:100%}
+.site-head .logo,.site-head nav a{color:#1E2126}
+.site-head nav a:hover,.site-head nav a[aria-current="page"]{background:#1E2126;color:#ECEEE8}
+.site-foot{color:#1E2126;border-top-color:#1E2126}
+.site-foot a{color:#1E2126}
+
 
 .ad{width:100%;min-height:90px}
