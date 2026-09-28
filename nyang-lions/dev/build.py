@@ -39,8 +39,15 @@ head = '''<!doctype html>
 <meta property="og:title" content="꾹꾹이즈">
 <meta property="og:description" content="우리 팀 막내 고양이를 주전 선수로 키워 주세요. 밥 주고, 놀아 주고, 같이 타격 연습!">
 <meta property="og:url" content="https://kangyubin12-wq.github.io/ja/nyang-lions/">
-<meta name="theme-color" content="#2f4a9a">
+<meta name="theme-color" content="#ecebe4">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="꾹꾹이즈">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:image" content="https://kangyubin12-wq.github.io/ja/nyang-lions/icon-512.png">
 '''
 i = repo_src.index('<div class="page">')
 html = head + repo_src[:i] + '</head>\n<body>\n' + repo_src[i:] + '\n</body>\n</html>\n'

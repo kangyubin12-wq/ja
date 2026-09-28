@@ -191,9 +191,41 @@ html.desk #desk-dev{display:block;position:fixed;left:0;top:0;image-rendering:pi
 .reset.armed{background:var(--warn);color:#fff}
 
 @media (prefers-reduced-motion:reduce){.banner.pop{animation:none}}
+
+/* phone app mode (installed to home screen, or ?app=1) */
+#mob{display:none}
+html.mob,html.mob body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html.mob.mob-egg .page{display:none}
+html.mob.mob-egg #mob{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 8px) 12px calc(env(safe-area-inset-bottom) + 10px);background:radial-gradient(120% 70% at 50% 30%,#f7f6f0 0%,#ecebe4 60%,#e2e0d6 100%)}
+html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-webkit-user-select:auto;user-select:auto}
+.mob-top{width:100%;max-width:460px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mob-name{font-weight:700;font-size:15px;letter-spacing:.04em;display:flex;align-items:center;gap:6px;min-width:0}
+.mob-name span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mob-name small{font-size:11px;padding:0 6px;border:2px solid var(--ink);border-radius:999px;background:#fff;flex:none}
+.mob-more{font:inherit;font-size:13px;font-weight:700;padding:6px 12px;border:2px solid var(--ink);border-radius:999px;background:#fff;color:var(--ink);box-shadow:0 3px 0 var(--ink);flex:none;touch-action:manipulation}
+.mob-more:active{transform:translateY(3px);box-shadow:none}
+#mob-dev{display:block;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:manipulation;flex:none}
+.mob-mid{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0}
+.mob-bar{width:100%;max-width:460px;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.mob-bar button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:62px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);font:inherit;font-size:11.5px;font-weight:700;box-shadow:0 4px 0 var(--ink);touch-action:manipulation;padding:0}
+.mob-bar button canvas{width:24px;height:24px;image-rendering:pixelated}
+.mob-bar button.hot{background:#f5a93a;color:#fff;transform:translateY(4px);box-shadow:none}
+.mob-bar button:disabled{opacity:.45}
+.mob-back{position:sticky;top:0;z-index:40;display:flex;justify-content:center;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;background:rgba(236,235,228,.94);border-bottom:2px solid var(--ink)}
+.app-btn{font:inherit;font-size:13px;font-weight:700;padding:7px 14px;border:2px solid var(--ink);border-radius:8px;background:var(--navy);color:#fff;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.app-btn:active{transform:translateY(3px);box-shadow:none}
+.sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:rgba(44,46,61,.45)}
+.sheet-card{width:min(100%,480px);background:var(--card);border:3px solid var(--ink);border-bottom:0;border-radius:16px 16px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom) + 18px);display:flex;flex-direction:column;gap:10px}
+.sheet-card h2{margin:0;font-size:18px}
+.sheet-card ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.sheet-card .note{margin:0;font-size:12.5px;color:var(--muted)}
+.sheet-card .row{display:flex;gap:8px;flex-wrap:wrap}
+.sheet-card .row button,.sheet-card .row a{flex:1;text-align:center;font:inherit;font-size:14px;font-weight:700;padding:10px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);text-decoration:none;box-shadow:0 3px 0 var(--ink)}
+.sheet-card .row .pri{background:var(--ink);color:#fff}
 </style>
 
 <div class="page">
+  <div class="mob-back" id="mob-back" hidden><button type="button" class="app-btn" id="mob-back-btn">🥚 다마고치로 돌아가기</button></div>
   <header class="top">
     <p class="eyebrow">CAT BASEBALL CLUB</p>
     <h1>꾹꾹이즈</h1>
@@ -255,6 +287,7 @@ html.desk #desk-dev{display:block;position:fixed;left:0;top:0;image-rendering:pi
         </div>
       </div>
       <button type="button" class="pip-btn" id="pip-btn" hidden>⧉ 작은 창으로 띄우기</button>
+      <button type="button" class="app-btn" id="app-btn" hidden>📱 폰 홈 화면에 앱으로 설치</button>
       <a class="dl-link" href="https://kangyubin12-wq.github.io/ja/nyang-lions/desktop/Kkukkukiz-setup.zip">🖥 바탕화면 고양이 프로그램 받기 (윈도우)</a>
       <p class="hint">고양이를 톡톡 누르면 쓰다듬어요 · ▶ 또는 톱니바퀴로 메뉴 · 훈련 중엔 화면이나 버튼을 눌러 스윙</p>
     </section>
@@ -314,6 +347,21 @@ html.desk #desk-dev{display:block;position:fixed;left:0;top:0;image-rendering:pi
       </div>
     </aside>
   </main>
+</div>
+
+<div id="mob" aria-label="꾹꾹이즈 다마고치">
+  <div class="mob-top"><div class="mob-name"><span id="mob-name">꾹이</span><small id="mob-lv">LV.1</small></div><button type="button" class="mob-more" id="mob-more">꾸미기 · 상태 ▸</button></div>
+  <div class="mob-mid"><canvas id="mob-dev" role="img" aria-label="다마고치 기기"></canvas></div>
+  <div class="mob-bar" id="mob-bar"></div>
+</div>
+
+<div class="sheet" id="app-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="app-sheet-t">
+  <div class="sheet-card">
+    <h2 id="app-sheet-t">📱 홈 화면에 앱으로 설치</h2>
+    <div id="app-steps"></div>
+    <div class="row"><button type="button" class="pri" id="app-install" hidden>지금 설치하기</button><a id="app-try" href="?app=1">설치 없이 다마고치 모드</a></div>
+    <div class="row"><button type="button" id="app-close">닫기</button></div>
+  </div>
 </div>
 
 <div class="intro" id="intro" hidden role="dialog" aria-modal="true" aria-labelledby="intro-t">
@@ -1380,6 +1428,78 @@ if(window.nyangDesktop){
   }, 30000);
   pipMsg = {text: `${st.name}(이)가 바탕화면에 왔어요!`, until: performance.now()+4000};
   if(document.fonts){ Promise.all([document.fonts.load('11px Galmuri11'), document.fonts.load('700 11px Galmuri11')]).then(()=>{ devStatic = null; }).catch(()=>{}); }
+}
+
+/* ---------- phone app mode (PWA installed to home screen, or ?app=1) ---------- */
+const isStandalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const inApp = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Line\//i.test(navigator.userAgent);
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
+const touchy = matchMedia('(pointer: coarse)').matches;
+if('serviceWorker' in navigator && location.protocol === 'https:' && window.self === window.top && !window.nyangDesktop && !window.nyangBig){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e; $('#app-install').hidden = false; });
+if(touchy && !isStandalone && !window.nyangDesktop && !window.nyangBig && window.self === window.top){ $('#app-btn').hidden = false; }
+function openAppSheet(){
+  let h;
+  if(inApp) h = `<ol><li>지금은 카톡·인스타 같은 앱 안에서 열려 있어서 설치가 안 돼요.</li><li>오른쪽 위(또는 아래) <b>⋮ / ···</b> 메뉴 → <b>다른 브라우저로 열기</b>를 눌러 주세요.</li><li>${isIOS ? 'Safari' : '크롬이나 삼성 인터넷'}에서 열리면 이 버튼을 다시 눌러요.</li></ol>`;
+  else if(isIOS) h = `<ol><li><b>Safari</b>로 열어 주세요. (크롬이면 주소창 옆 공유 버튼도 돼요)</li><li>아래쪽 <b>공유 버튼</b> <span aria-hidden="true">(□↑)</span>을 눌러요.</li><li>목록을 올려서 <b>홈 화면에 추가</b> → <b>추가</b>.</li><li>홈 화면의 <b>꾹꾹이즈</b> 아이콘으로 켜면 다마고치 모드로 열려요.</li></ol>`;
+  else if(isSamsung) h = `<ol><li>아래쪽 <b>≡ 메뉴</b>를 눌러요.</li><li><b>현재 페이지 추가</b> → <b>홈 화면</b>을 골라요.</li><li>홈 화면의 <b>꾹꾹이즈</b> 아이콘으로 켜요.</li></ol>`;
+  else h = installEvt ? `<p class="note">아래 <b>지금 설치하기</b>를 누르면 홈 화면에 꾹꾹이즈 아이콘이 생겨요.</p>` : `<ol><li>크롬 오른쪽 위 <b>⋮ 메뉴</b>를 눌러요.</li><li><b>홈 화면에 추가</b> 또는 <b>앱 설치</b>를 골라요.</li><li>홈 화면의 <b>꾹꾹이즈</b> 아이콘으로 켜요.</li></ol>`;
+  $('#app-steps').innerHTML = h + '<p class="note">키우던 기록은 이 브라우저에 저장돼 있어서, 설치한 앱에서도 그대로 이어져요.</p>';
+  $('#app-install').hidden = !installEvt;
+  $('#app-sheet').hidden = false;
+}
+$('#app-btn').addEventListener('click', openAppSheet);
+$('#app-close').addEventListener('click', ()=>{ $('#app-sheet').hidden = true; });
+$('#app-sheet').addEventListener('click', e=>{ if(e.target.id === 'app-sheet') $('#app-sheet').hidden = true; });
+$('#app-install').addEventListener('click', async ()=>{ if(!installEvt) return; installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt = null; $('#app-sheet').hidden = true; });
+window.addEventListener('appinstalled', ()=>{ $('#app-btn').hidden = true; say('홈 화면에 꾹꾹이즈가 생겼어요!', 3500); });
+
+const wantMob = !window.nyangDesktop && !window.nyangBig && (isStandalone || new URLSearchParams(location.search).has('app'));
+if(wantMob){
+  const R = document.documentElement; R.classList.add('mob', 'mob-egg');
+  $('#app-btn').hidden = true; $('#pip-btn').hidden = true; document.querySelector('.dl-link').hidden = true;
+  const dev = $('#mob-dev'); dev.width = DW; dev.height = DH; pipCtx = dev.getContext('2d');
+  function mobSize(){
+    const dpr = devicePixelRatio || 1, top = $('.mob-top').offsetHeight, bar = $('#mob-bar').offsetHeight;
+    const aw = innerWidth - 16, ah = innerHeight - top - bar - 40 - (parseFloat(getComputedStyle($('#mob')).paddingTop)||0) - (parseFloat(getComputedStyle($('#mob')).paddingBottom)||0);
+    let k = Math.min(aw*dpr/DW, ah*dpr/DH); k = k >= dpr ? Math.floor(k) : k;
+    dev.style.width = (DW*k/dpr)+'px'; dev.style.height = (DH*k/dpr)+'px';
+  }
+  const LABEL = {feed:'밥', play:'놀기', pet:'쓰담', brush:'씻기', sleep:'재우기', train:'훈련'};
+  const bar = $('#mob-bar');
+  CELLS.forEach((k,i)=>{
+    const b = document.createElement('button'); b.type = 'button'; b.dataset.k = k;
+    const ic = ICONS[TOOL_IC[k] || k], c = document.createElement('canvas'); c.width = ic[0].length; c.height = ic.length;
+    pixMap(c.getContext('2d'), ic, 0, 0, INK); c.style.width = (c.width*2)+'px'; c.style.height = (c.height*2)+'px';
+    const t = document.createElement('span'); t.textContent = LABEL[k]; b.append(c, t); b.setAttribute('aria-label', LABEL[k]);
+    b.addEventListener('click', ()=>{
+      pressedCell[i] = performance.now(); b.classList.add('hot'); setTimeout(()=>b.classList.remove('hot'), 180);
+      try{ navigator.vibrate && navigator.vibrate(12); }catch(e){}
+      if(tr){ swing(); return; } act(k); mobSync();
+    });
+    bar.appendChild(b);
+  });
+  function mobSync(){
+    $('#mob-name').textContent = st.name; $('#mob-lv').textContent = 'LV.' + st.level;
+    const sb = bar.querySelector('[data-k="sleep"] span'); if(sb) sb.textContent = st.sleeping ? '깨우기' : '재우기';
+  }
+  dev.addEventListener('pointerdown', e=>{ if(devPointer(e, dev)){ try{ navigator.vibrate && navigator.vibrate(12); }catch(_){} mobSync(); } });
+  function showEgg(on){
+    R.classList.toggle('mob-egg', on); $('#mob-back').hidden = on;
+    if(on){ requestAnimationFrame(mobSize); mobSync(); } else { scrollTo(0,0); }
+  }
+  $('#mob-more').addEventListener('click', ()=>showEgg(false));
+  $('#mob-back-btn').addEventListener('click', ()=>showEgg(true));
+  addEventListener('resize', ()=>{ if(R.classList.contains('mob-egg')) mobSize(); });
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden) save(); else mobSync(); });
+  setInterval(mobSync, 3000);
+  mobSize(); mobSync();
+  if(document.fonts){ Promise.all([document.fonts.load('11px Galmuri11'), document.fonts.load('700 11px Galmuri11')]).then(()=>{ devStatic = null; mobSize(); }).catch(()=>{}); }
+  pipMsg = {text: `${st.name}(이)가 기다렸어요!`, until: performance.now()+3500};
 }
 
 /* loop */

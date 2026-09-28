@@ -13,3 +13,8 @@
    - `main.js`, `preload.js` 도 version.json 의 files 목록에 있으면 같이 교체된다. 실행 엔진(Electron) 자체 교체는 install.bat 재실행 필요.
 
 저장 키: localStorage `nyang-lions-v1` (바탕화면 앱 userData 폴더는 `%APPDATA%\NyangLions` 고정 — 이름 바꿔도 기록 유지)
+
+## 폰 앱 (PWA)
+- `manifest.webmanifest`, `sw.js`, `icon-192/512.png`, `apple-touch-icon.png` 가 nyang-lions/ 에 있음.
+- 홈 화면 아이콘으로 켜면(standalone) 또는 `?app=1` 이면 다마고치 모드(`html.mob`). 코드: nyang-src.html 의 "phone app mode" 블록.
+- sw.js 는 네트워크 우선이라 push 하면 앱도 다음 실행 때 새 버전. 캐시 구조를 바꾸면 `CACHE` 이름을 올릴 것.
