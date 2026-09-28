@@ -11,7 +11,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 230, height: 316, frame: false, transparent: true, resizable: false,
     alwaysOnTop: true, skipTaskbar: true, hasShadow: false, show: false,
-    backgroundColor: '#00000000', title: '냥이 라이온즈',
+    backgroundColor: '#00000000', title: '꾹꾹이즈',
     icon: path.join(__dirname, 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), backgroundThrottling: false, contextIsolation: true }
   });
@@ -38,7 +38,7 @@ function openBig() {
   setTimeout(() => {
     win.hide();
     big = new BrowserWindow({
-      width: 1180, height: 920, minWidth: 420, minHeight: 600, title: '냥이 라이온즈', autoHideMenuBar: true,
+      width: 1180, height: 920, minWidth: 420, minHeight: 600, title: '꾹꾹이즈', autoHideMenuBar: true,
       backgroundColor: '#ecebe4', icon: path.join(__dirname, 'icon.png'),
       webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true }
     });
@@ -70,7 +70,7 @@ ipcMain.on('menu', (_e, s) => { Menu.buildFromTemplate(menuTemplate(s)).popup({ 
 function createTray() {
   const img = nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ width: 16, height: 16, quality: 'best' });
   tray = new Tray(img);
-  tray.setToolTip('냥이 라이온즈');
+  tray.setToolTip('꾹꾹이즈');
   const m = Menu.buildFromTemplate([
     { label: '고양이 보이기', click: () => { if (!big) win.show(); } },
     { label: '크게 열기', click: openBig },

@@ -9,7 +9,7 @@ $url  = "https://github.com/electron/electron/releases/download/v$ver/electron-v
 $tmp  = Join-Path $env:TEMP "nyang-electron-$ver.zip"
 
 Write-Host ''
-Write-Host '  냥이 라이온즈 바탕화면 고양이 설치' -ForegroundColor Cyan
+Write-Host '  꾹꾹이즈 바탕화면 고양이 설치' -ForegroundColor Cyan
 Write-Host '  ---------------------------------'
 Get-Process -Name 'NyangLions' -ErrorAction SilentlyContinue | Stop-Process -Force
 if (-not (Test-Path (Join-Path $dest 'NyangLions.exe'))) {
@@ -30,12 +30,13 @@ Copy-Item (Join-Path $here 'app') $appDir -Recurse -Force
 $exe = Join-Path $dest 'NyangLions.exe'
 $ico = Join-Path $appDir 'icon.ico'
 $ws  = New-Object -ComObject WScript.Shell
+foreach ($old in @((Join-Path ([Environment]::GetFolderPath('Desktop')) '냥이 라이온즈.lnk'), (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\냥이 라이온즈.lnk'))) { if (Test-Path $old) { Remove-Item $old -Force } }
 foreach ($dir in @([Environment]::GetFolderPath('Desktop'), (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'))) {
-  $lnk = $ws.CreateShortcut((Join-Path $dir '냥이 라이온즈.lnk'))
-  $lnk.TargetPath = $exe; $lnk.WorkingDirectory = $dest; $lnk.IconLocation = $ico; $lnk.Description = '냥이 라이온즈 바탕화면 고양이'
+  $lnk = $ws.CreateShortcut((Join-Path $dir '꾹꾹이즈.lnk'))
+  $lnk.TargetPath = $exe; $lnk.WorkingDirectory = $dest; $lnk.IconLocation = $ico; $lnk.Description = '꾹꾹이즈 바탕화면 고양이'
   $lnk.Save()
 }
 Write-Host ''
-Write-Host '  설치 완료! 바탕화면의 [냥이 라이온즈] 아이콘으로 언제든 다시 켤 수 있어요.' -ForegroundColor Green
+Write-Host '  설치 완료! 바탕화면의 [꾹꾹이즈] 아이콘으로 언제든 다시 켤 수 있어요.' -ForegroundColor Green
 Start-Process $exe
 Start-Sleep -Seconds 3
