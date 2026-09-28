@@ -109,7 +109,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .hw button{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--ink)}
 .hw button span.k{width:50px;height:50px;border-radius:50%;border:3px solid var(--ink);background:radial-gradient(circle at 34% 30%,#c9d6f5 0 14%,#7f97d6 30%,#4f6bb8 72%,#3a559e 100%);box-shadow:0 5px 0 var(--ink)}
 .hw button:nth-child(2){margin-top:18px}
-.hw button:active span.k{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.hw button:active span.k{transform:translateY(4px);box-shadow:0 1px 0 var(--ink);background:radial-gradient(circle at 34% 30%,#fff3cc 0 14%,#ffc758 34%,#f5a93a 70%,#c86d1e 100%)}
 .egg .bot-paw{display:flex;justify-content:center;margin-top:14px;color:var(--ink)}
 .hint{margin:0;font-size:12px;color:var(--muted);text-align:center}
 @media (max-width:480px){.egg{padding:92px 18px 48px;border-radius:46% / 22% 22% 26% 26%}.egg .arc{top:30px;width:80%}.stripe{width:24px}}
@@ -347,7 +347,7 @@ html.desk #desk-dev{display:block;position:fixed;left:0;top:0;image-rendering:pi
 <script>
 (() => {
 'use strict';
-let pip = null, pipCtx = null, pipMsg = null, pipBanner = null;
+let pip = null, pipCtx = null, pipMsg = null, pipBanner = null, uiReady = false;
 const $ = s => document.querySelector(s);
 const rand = (a,b) => a + Math.random()*(b-a);
 const pick = a => a[Math.floor(Math.random()*a.length)];
@@ -568,9 +568,10 @@ function fresh(){
     sleeping:false, best:0, trainings:0, homers:0, fur:'cream', cap:'blue', acc:{}, setup:false, log:[{t, text:'첫 만남! 냥이 라이온즈 입단'}]};
 }
 function load(){ try{ const raw=localStorage.getItem(KEY); if(raw) return Object.assign(fresh(), JSON.parse(raw)); }catch(e){} return fresh(); }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+let frozen = false;
+function save(){ if(frozen) return; try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
 let st = load();
-function addLog(text){ st.log.unshift({t:Date.now(), text}); st.log = st.log.slice(0,8); renderLog(); }
+function addLog(text){ st.log.unshift({t:Date.now(), text}); st.log = st.log.slice(0,8); if(uiReady) renderLog(); }
 const needXp = lv => 20 + (lv-1)*15;
 const grade = lv => lv>=12?'MVP':lv>=9?'올스타':lv>=6?'주전 선수':lv>=4?'1군 벤치':lv>=2?'2군 선수':'연습생';
 function gainXp(n){
@@ -1189,18 +1190,27 @@ function buildDevStatic(){
   pixMap(x, ICONS.paw, ECX-4, 284, INK);
   devStatic = c;
 }
-function drawButton(b, down){
-  const R = 11, oy = down ? 2 : 0, cx = b.x, cy = b.y + oy;
+const PRESS_MS = 260;
+function drawButton(b, t){
+  const R = 11, down = t !== null && t < PRESS_MS, cx = b.x;
+  const oy = down ? (t < 90 ? 4 : t < 170 ? 3 : 2) : 0, cy = b.y + oy;
   if(!down) pxDisc(dctx, cx, b.y+3, R, INK);
   pxDisc(dctx, cx, cy, R, INK);
-  const BL = ['#28407e','#34509a','#4461b0','#5876c3','#728fd3','#93acE3','#bfd0f3'];
+  const BL = down ? ['#a8541a','#c86d1e','#e38a27','#f5a93a','#ffc758','#ffe08e','#fff3cc']
+                  : ['#28407e','#34509a','#4461b0','#5876c3','#728fd3','#93acE3','#bfd0f3'];
+  const pal = BL.map(hex);
   for(let j=-R+2;j<=R-2;j++) for(let i=-R+2;i<=R-2;i++){
     const r2 = (i*i+j*j)/((R-1.6)**2); if(r2 > 1) continue;
     const u=i/(R-1.6), v=j/(R-1.6), z=Math.sqrt(Math.max(0,1-u*u-v*v)), dot=u*LIGHT[0]+v*LIGHT[1]+z*LIGHT[2];
-    const col = ramp(BL.map(hex), .1 + .95*dot - (down?.15:0), cx+i, cy+j); dctx.fillStyle = `rgb(${col})`; dctx.fillRect(cx+i, cy+j, 1, 1);
+    const col = ramp(pal, .12 + .95*dot, cx+i, cy+j); dctx.fillStyle = `rgb(${col})`; dctx.fillRect(cx+i, cy+j, 1, 1);
   }
-  dctx.fillStyle = '#f4f7ff'; dctx.fillRect(cx-5, cy-6, 2, 2); dctx.fillRect(cx-6, cy-4, 1, 1);
+  dctx.fillStyle = down ? '#fffbe8' : '#f4f7ff'; dctx.fillRect(cx-5, cy-6, 2, 2); dctx.fillRect(cx-6, cy-4, 1, 1);
+  if(t !== null && t < 340){
+    const rr = R + 3 + Math.floor(t/45), on = Math.floor(t/60) % 2 === 0 ? '#ffd35a' : '#ffffff';
+    for(let a=0;a<8;a++){ const ang = a/8*Math.PI*2 + .2; dctx.fillStyle = a%2 ? on : '#f5a93a'; dctx.fillRect(Math.round(cx+Math.cos(ang)*rr), Math.round(b.y+2+Math.sin(ang)*rr), 2, 2); }
+  }
 }
+const pressedCell = {};
 function miniScene(ts, X, Y){
   const k = SC.k, gy = Y + Math.round(GROUND*k);
   dctx.drawImage(isNight() ? BG.night : BG.day, 0, 0, W, H, X, Y, SC.w, SC.h);
@@ -1227,7 +1237,7 @@ function renderDevice(ts){
   if(!devStatic) buildDevStatic();
   dctx.imageSmoothingEnabled = false;
   dctx.clearRect(0,0,DW,DH); dctx.drawImage(devStatic, 0, 0);
-  BTN.forEach(b => drawButton(b, pressed[b.k] && ts - pressed[b.k] < 160));
+  BTN.forEach(b => drawButton(b, pressed[b.k] != null ? ts - pressed[b.k] : null));
   const X = LCD.x, Y = LCD.y;
   dctx.fillStyle = '#e8e6dc'; dctx.fillRect(X, Y, LCD.w, LCD.h);
   // top row: ball, clock, battery (12px)
@@ -1248,7 +1258,10 @@ function renderDevice(ts){
   for(let i=0;i<5;i++){
     const cx = Math.round(X + i*CW); if(i) dctx.fillRect(cx, iy, 1, LCD.h-(iy-Y));
     const ic = ICONS[TOOL_IC[CELLS[i]] || CELLS[i]], w = ic[0].length, h = ic.length;
-    pixMap(dctx, ic, Math.round(cx + CW/2 - w/2), iy + Math.max(0, Math.floor((LCD.h-(iy-Y)-h)/2)), INK);
+    const hot = pressedCell[i] != null && ts - pressedCell[i] < 240;
+    if(hot){ dctx.fillStyle = '#f5a93a'; dctx.fillRect(cx+(i?1:0), iy, Math.round(CW)-(i?1:0), LCD.h-(iy-Y)); }
+    pixMap(dctx, ic, Math.round(cx + CW/2 - w/2), iy + Math.max(0, Math.floor((LCD.h-(iy-Y)-h)/2)) + (hot?1:0), hot ? '#ffffff' : INK);
+    dctx.fillStyle = INK;
   }
   // overlays
   dctx.font = '11px Galmuri11, monospace';
@@ -1281,7 +1294,7 @@ function devHit(px, py){
 function devPointer(e, dev){
   const r = dev.getBoundingClientRect(), px = (e.clientX-r.left)/r.width*DW, py = (e.clientY-r.top)/r.height*DH;
   const b = BTN.find(b => (px-b.x)**2 + (py-b.y)**2 <= 16*16); if(b){ e.preventDefault(); pipPress(b.k); return true; }
-  if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13+SC.h+11 && py<LCD.y+LCD.h){ const k = CELLS[Math.min(4,Math.floor((px-LCD.x)/CW))]; pressed[k]=performance.now(); if(tr){ swing(); return true; } act(k); return true; }
+  if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13+SC.h+11 && py<LCD.y+LCD.h){ const ci = Math.min(4,Math.floor((px-LCD.x)/CW)), k = CELLS[ci]; pressedCell[ci]=performance.now(); if(tr){ swing(); return true; } act(k); return true; }
   if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y && py<LCD.y+13+SC.h){
     if(tr){ e.preventDefault(); swing(); return true; }
     const gx = (px-LCD.x)/SC.k, gy = (py-LCD.y-13)/SC.k; if(Math.abs(gx-catX) < 24 && gy > GROUND-92 && gy < GROUND+3) act('pet');
@@ -1313,7 +1326,12 @@ async function openPip(){
     say(window.self !== window.top ? '여기서는 작은 창을 열 수 없어요. 깃허브 주소에서 열어 주세요!' : '작은 창을 열지 못했어요. 크롬이나 엣지 최신 버전에서 다시 해 주세요.', 4500);
   }
 }
-if('documentPictureInPicture' in window){ $('#pip-btn').hidden = false; }
+if('documentPictureInPicture' in window && !window.nyangDesktop && !window.nyangBig){ $('#pip-btn').hidden = false; }
+if(window.nyangBig){
+  document.querySelector('.dl-link').hidden = true;
+  const b = $('#pip-btn'); b.hidden = false; b.textContent = '🥚 바탕화면 고양이로 돌아가기';
+  b.addEventListener('click', e=>{ e.stopImmediatePropagation(); save(); window.nyangBig.back(); }, true);
+}
 $('#pip-btn').addEventListener('click', openPip);
 $('#pip-back').addEventListener('click', ()=>{ if(pip) pip.close(); });
 
@@ -1343,13 +1361,12 @@ if(window.nyangDesktop){
     const [px,py] = artXY(e), ig = !onEgg(px,py); if(ig !== ignoring){ ignoring = ig; D.setIgnore(ig); }
   });
   dev.addEventListener('pointerup', ()=>{ drag = null; });
+  dev.addEventListener('dblclick', e=>{ const [px,py] = artXY(e); if(onEgg(px,py) && !devHit(px,py)) D.openBig(); });
   document.addEventListener('mouseleave', ()=>{ if(!drag && ignoring !== true){ ignoring = true; D.setIgnore(true); } });
   document.addEventListener('keydown', e=>{ if(tr && (e.code==='Space'||e.key===' ')){ e.preventDefault(); swing(); } });
   dev.addEventListener('contextmenu', e=>{
     e.preventDefault();
-    D.showMenu({k: deskK, sleeping: st.sleeping, training: !!tr, fur: st.fur, cap: st.cap,
-      furs: Object.entries(FURS).map(([k,v])=>({k, n:v.n})), caps: Object.entries(CAPS).map(([k,v])=>({k, n:v.n})),
-      accs: ACCS.map(a=>({k:a.k, n:a.n, ok:a.ok(), on:!!st.acc[a.k], how:a.how}))});
+    D.showMenu({k: deskK, sleeping: st.sleeping, training: !!tr});
   });
   D.onCmd(o=>{
     if(o.t==='act') act(o.k);
@@ -1357,7 +1374,7 @@ if(window.nyangDesktop){
     else if(o.t==='cap'){ st.cap = o.k; refreshLooks(); }
     else if(o.t==='acc'){ st.acc = {...st.acc, [o.k]: !st.acc[o.k]}; refreshLooks(); }
     else if(o.t==='size'){ deskK = o.k; st.deskK = o.k; save(); deskSize(); }
-    else if(o.t==='name'){ }
+    else if(o.t==='freeze'){ save(); frozen = true; }
   });
   /* gentle desktop reminders when the cat needs something */
   const warned = {};
@@ -1382,6 +1399,7 @@ function loop(ts){
   if(pipCtx){ renderDevice(ts); pipCtx.imageSmoothingEnabled=false; pipCtx.clearRect(0,0,DW,DH); pipCtx.drawImage(DEV,0,0); }
   requestAnimationFrame(loop);
 }
+uiReady = true;
 renderAll(); renderLog(); renderClock();
 setTimeout(()=>say(st.log.length<=1 ? `안녕! 나는 ${st.name}. 오늘 입단했어!` : pick(LINES[baseMood()])), 600);
 requestAnimationFrame(loop);
