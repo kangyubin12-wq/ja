@@ -114,6 +114,12 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .hint{margin:0;font-size:12px;color:var(--muted);text-align:center}
 @media (max-width:480px){.egg{padding:92px 18px 48px;border-radius:46% / 22% 22% 26% 26%}.egg .arc{top:30px;width:80%}.stripe{width:24px}}
 
+.pip-btn{font:inherit;font-size:13px;font-weight:700;padding:7px 14px;border:2px solid var(--ink);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.pip-btn:active{transform:translateY(3px);box-shadow:none}
+.pip-btn:focus-visible,.pip-note button:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+.pip-note{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(233,231,221,.92);font-size:13px;font-weight:700;text-align:center;padding:10px}
+.pip-note button{font:inherit;font-size:12px;padding:5px 12px;border:2px solid var(--ink);border-radius:6px;background:#fff;cursor:pointer}
+
 /* closet + intro */
 .closet{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
 .closet canvas,.intro-card canvas{width:144px;height:144px;image-rendering:pixelated;border:3px solid var(--ink);border-radius:6px;background:#e9ebe8}
@@ -221,6 +227,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
                 <div class="banner" id="banner" hidden></div>
                 <div class="thud" id="thud" hidden></div>
                 <div class="fx" id="fx" hidden></div>
+                <div class="pip-note" id="pip-note" hidden><span>작은 창에서 돌보는 중이에요</span><button type="button" id="pip-back">여기로 가져오기</button></div>
               </div>
               <div class="stat-lcd" id="hud"></div>
               <span class="mood" id="mood-chip">기본</span>
@@ -255,6 +262,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
           <div class="bot-paw"><span class="paw"></span></div>
         </div>
       </div>
+      <button type="button" class="pip-btn" id="pip-btn" hidden>⧉ 작은 창으로 띄우기</button>
       <p class="hint">고양이를 톡톡 누르면 쓰다듬어요 · ▶ 또는 톱니바퀴로 메뉴 · 훈련 중엔 화면이나 버튼을 눌러 스윙</p>
     </section>
 
@@ -746,10 +754,12 @@ function update(ts, dt){
 /* speech & banner */
 let bubbleTimer = 0, bannerTimer = 0;
 function say(text, ms=3000){
+  if(pip){ const m=pip.document.querySelector('#m-msg'); if(m) m.textContent=text; }
   const b = $('#bubble'); b.textContent = text; b.hidden = false; $('#quote').textContent = `"${text}"`;
   clearTimeout(bubbleTimer); bubbleTimer = setTimeout(()=>{ b.hidden = true; }, ms);
 }
 function banner(text, ms=900){
+  if(pip){ const m=pip.document.querySelector('#m-banner'); if(m){ m.textContent=text; m.hidden=false; clearTimeout(m._t); m._t=setTimeout(()=>{ m.hidden=true; }, ms); } }
   const b = $('#banner'); b.textContent = text; b.hidden = false;
   b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
   clearTimeout(bannerTimer); bannerTimer = setTimeout(()=>{ b.hidden = true; }, ms);
@@ -805,7 +815,7 @@ function startTraining(){
   showView('main'); $('#menu').hidden = true; $('#swingbar').hidden = false; $('#thud').hidden = false; $('#bubble').hidden = true;
   banner('PLAY BALL!', 1000); say('공이 노란 동그라미에 들어올 때 스윙!', 3500); updateThud(); $('#swing-btn').focus({preventScroll:true});
 }
-const updateThud = () => { if(tr) $('#thud').textContent = `${tr.pt && tr.phase==='pitch' ? tr.pt.n+' '+tr.kmh+'km · ' : ''}${Math.min(tr.pitch+1,tr.total)}/${tr.total}구 · ${tr.hits}안타`; };
+const updateThud = () => { if(tr) pipThud(); if(tr) $('#thud').textContent = `${tr.pt && tr.phase==='pitch' ? tr.pt.n+' '+tr.kmh+'km · ' : ''}${Math.min(tr.pitch+1,tr.total)}/${tr.total}구 · ${tr.hits}안타`; };
 const ZX=100, ZY=98, PERFECT=.07, GOOD=.2;
 const PITCHES=[
   {n:'직구', d:[900,1150], c:[0,-4], w:0, e:0},
@@ -947,6 +957,7 @@ const fmtDate = t => { const d=new Date(t); return `${d.getFullYear()}.${pad2(d.
 const fmtShort = t => { const d=new Date(t); return `${pad2(d.getMonth()+1)}/${pad2(d.getDate())}`; };
 
 function renderStats(){
+  renderPipStats();
   let sum = 0;
   STATS.forEach(([k,,,,kind])=>{
     const el = $('#st-'+k);
@@ -1084,6 +1095,109 @@ function initLooks(){
   };
 }
 
+/* ---------- mini tamagotchi window (Document Picture-in-Picture, Chrome/Edge desktop) ---------- */
+let pip = null, pipCtx = null;
+const MINI_CSS = `
+html,body{margin:0;height:100%;background:#ecebe4;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center;font-family:var(--pix);color:#2c2e3d;-webkit-font-smoothing:none}
+.m-egg{position:relative;box-sizing:border-box;width:calc(100% - 14px);height:calc(100% - 14px);border:3px solid #2c2e3d;border-radius:50% / 32% 32% 38% 38%;
+  background:radial-gradient(110% 80% at 30% 18%,#fff 0%,#f7f5ee 42%,#e4e0d4 84%,#d4cfc0 100%);
+  box-shadow:inset -8px -10px 0 rgba(44,46,61,.09),inset 5px 5px 0 rgba(255,255,255,.9);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;overflow:hidden;padding:18px 12px 14px}
+.m-top{display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:700;font-size:11px;letter-spacing:.14em}
+.m-stripe{position:absolute;top:44%;width:26px;height:12px;background:repeating-linear-gradient(118deg,transparent 0 5px,#5e75a8 5px 9px)}
+.m-stripe.l{left:-3px}.m-stripe.r{right:-3px}
+.m-lcd{background:#e9e7dd;border:3px solid #2c2e3d;border-radius:8px;box-shadow:0 0 0 3px #cbc7b9,0 0 0 5px #2c2e3d;overflow:hidden;display:flex;flex-direction:column}
+.m-screen{position:relative;border-bottom:2px solid #2c2e3d;cursor:pointer;touch-action:manipulation}
+#m-cv{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+.m-banner{position:absolute;right:4px;top:4px;font-weight:700;font-size:12px;color:#fff;background:#2c2e3d;padding:0 6px;pointer-events:none}
+.m-thud{position:absolute;left:3px;bottom:3px;font-size:9.5px;color:#fff;background:#2c2e3d;padding:0 4px;pointer-events:none}
+.m-msg{font-size:10.5px;line-height:1.5;padding:2px 6px;border-bottom:2px solid #2c2e3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fff}
+.m-stat{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;padding:4px 6px 5px;font-size:10px}
+.m-row{display:flex;align-items:center;gap:4px}
+.m-row svg{flex:none}
+.m-hearts{display:flex;gap:1px}.m-hearts span{display:flex}.m-hearts span.on{color:#d9444f}
+.m-dots{display:flex;gap:4px;align-items:center}
+.m-dots i{width:3px;height:3px;border-radius:50%;background:#2c2e3d;opacity:.5}
+.m-dots i.on{width:6px;height:6px;opacity:1}
+.m-dots.low i.on{background:#c64f5b}
+.m-hw{display:flex;gap:16px;align-items:flex-start}
+.m-hw button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;cursor:pointer;font:inherit;font-weight:700;font-size:9.5px;letter-spacing:.06em;color:#2c2e3d;padding:0}
+.m-hw button span{width:30px;height:30px;border-radius:50%;border:2px solid #2c2e3d;background:radial-gradient(circle at 34% 30%,#c9d6f5 0 14%,#7f97d6 30%,#4f6bb8 72%,#3a559e 100%);box-shadow:0 3px 0 #2c2e3d}
+.m-hw button:nth-child(2){margin-top:9px}
+.m-hw button:active span{transform:translateY(3px);box-shadow:0 0 0 #2c2e3d}
+.m-hw button:focus-visible{outline:2px solid #2f4a9a;outline-offset:2px}
+.m-paw{display:flex}`;
+const MINI_HTML = `
+<div class="m-egg">
+  <span class="m-stripe l"></span><span class="m-stripe r"></span>
+  <div class="m-top"><span class="m-paw"></span><span>CAT BASEBALL CLUB</span></div>
+  <div class="m-lcd" id="m-lcd">
+    <div class="m-screen"><canvas id="m-cv" width="160" height="120"></canvas><div class="m-banner" id="m-banner" hidden></div><div class="m-thud" id="m-thud" hidden></div></div>
+    <div class="m-msg" id="m-msg"></div>
+    <div class="m-stat" id="m-stat"></div>
+  </div>
+  <div class="m-hw">
+    <button type="button" id="m-feed" title="밥 주기"><span></span>FEED</button>
+    <button type="button" id="m-play" title="놀아주기"><span></span>PLAY</button>
+    <button type="button" id="m-care" title="쓰다듬기"><span></span>CARE</button>
+  </div>
+  <span class="m-paw"></span>
+</div>`;
+function pipBtn(k){ if(tr){ swing(); return; } if(st.sleeping && k!=='sleep'){ act(k); return; } act(k); }
+function fitPip(){
+  if(!pip) return;
+  const d = pip.document, W = pip.innerWidth, H = pip.innerHeight;
+  const k = (W >= 430 && H >= 600) ? 2 : 1;
+  const c = d.querySelector('#m-cv'); c.style.width = 160*k+'px'; c.style.height = 120*k+'px';
+  d.querySelector('#m-lcd').style.width = (160*k)+'px';
+}
+function renderPipStats(){
+  if(!pip) return; const box = pip.document.querySelector('#m-stat'); if(!box) return;
+  if(!box.dataset.built){
+    box.dataset.built = '1';
+    box.innerHTML = `<span class="m-row">${pixSvg(ICONS.heart,10)}<span class="m-hearts" id="m-h">${'<span></span>'.repeat(5)}</span></span>` +
+      [['hunger','hunger'],['energy','energy'],['clean','clean']].map(([k,ic])=>`<span class="m-row">${pixSvg(ICONS[ic],10)}<span class="m-dots" id="m-${k}">${'<i></i>'.repeat(5)}</span></span>`).join('');
+  }
+  box.querySelectorAll('#m-h span').forEach((s,i)=>{ const on = st.happy >= i*20+10; s.innerHTML = pixSvg(on?ICONS.heart:ICONS.heartE,10); s.classList.toggle('on',on); });
+  ['hunger','energy','clean'].forEach(k=>{ const el = box.querySelector('#m-'+k); el.classList.toggle('low', st[k]<25); el.querySelectorAll('i').forEach((s,i)=>s.classList.toggle('on', i < Math.round(st[k]/20))); });
+}
+function pipThud(){ if(!pip) return; const t = pip.document.querySelector('#m-thud'); if(!t) return; if(tr){ t.hidden=false; t.textContent = `${tr.pt && tr.phase==='pitch' ? tr.pt.n+' · ' : ''}${Math.min(tr.pitch+1,tr.total)}/${tr.total}구 ${tr.hits}안타`; } else t.hidden = true; }
+async function openPip(){
+  if(pip){ pip.focus && pip.focus(); return; }
+  try{
+    const w = await documentPictureInPicture.requestWindow({width:300, height:440});
+    pip = w;
+    document.querySelectorAll('style').forEach(el=>w.document.head.appendChild(el.cloneNode(true)));
+    const css = w.document.createElement('style'); css.textContent = MINI_CSS; w.document.head.appendChild(css);
+    w.document.title = '냥이 라이온즈';
+    w.document.body.innerHTML = MINI_HTML;
+    const q = sel => w.document.querySelector(sel);
+    w.document.querySelectorAll('.m-paw').forEach(el=>el.innerHTML = pixSvg(ICONS.paw,12));
+    pipCtx = q('#m-cv').getContext('2d');
+    q('#m-feed').addEventListener('click', ()=>pipBtn('feed'));
+    q('#m-play').addEventListener('click', ()=>pipBtn('play'));
+    q('#m-care').addEventListener('click', ()=>pipBtn('pet'));
+    q('#m-cv').addEventListener('pointerdown', e=>{
+      if(tr){ e.preventDefault(); swing(); return; }
+      const r = e.currentTarget.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
+      if(Math.abs(x-catX) < 24 && y > GROUND-92 && y < GROUND+3) act('pet');
+    });
+    w.document.addEventListener('keydown', e=>{ if(tr && (e.code==='Space'||e.key===' ')){ e.preventDefault(); swing(); } });
+    w.addEventListener('resize', fitPip);
+    w.addEventListener('pagehide', ()=>{ pip = null; pipCtx = null; $('#pip-note').hidden = true; $('#pip-btn').hidden = false; });
+    fitPip(); renderPipStats(); pipThud();
+    q('#m-msg').textContent = $('#bubble').hidden ? `${st.name}(이)가 옆에서 지켜보고 있어요` : $('#bubble').textContent;
+    $('#pip-note').hidden = false; $('#pip-btn').hidden = true;
+  }catch(err){
+    pip = null; pipCtx = null;
+    say(window.self !== window.top ? '여기서는 작은 창을 열 수 없어요. 깃허브 주소에서 열어 주세요!' : '작은 창을 열지 못했어요. 크롬이나 엣지 최신 버전에서 다시 해 주세요.', 4500);
+  }
+}
+if('documentPictureInPicture' in window){ $('#pip-btn').hidden = false; }
+$('#pip-btn').addEventListener('click', openPip);
+$('#pip-back').addEventListener('click', ()=>{ if(pip) pip.close(); });
+
 /* loop */
 let lastTs = performance.now(), acc = 0, saveAcc = 0;
 function loop(ts){
@@ -1091,6 +1205,7 @@ function loop(ts){
   if(acc >= 1000){ decay(acc/60000); acc = 0; renderAll(); renderClock(); }
   if(saveAcc > 5000){ save(); saveAcc = 0; }
   update(ts, dt); draw(ts);
+  if(pipCtx){ pipCtx.imageSmoothingEnabled=false; pipCtx.drawImage(cv,0,0); }
   requestAnimationFrame(loop);
 }
 renderAll(); renderLog(); renderClock();
