@@ -554,13 +554,18 @@ function drawTraining(ts){
   const hit = tr.lastHitT && ts-tr.lastHitT<900;
   drawCat(cx, frame(hit?'happy':'normal'));
   if(swinging) ctx.drawImage(BAT_SW(), cx+8, GROUND-22); else ctx.drawImage(BAT_UP(), cx+12, GROUND-50);
+  // hit zone: lights up while the ball is hittable
+  const zp = tr.phase==='pitch' ? (ts-tr.start)/tr.dur : -1;
+  const zc = Math.abs(zp-1)<=PERFECT ? '#fff36b' : Math.abs(zp-1)<=GOOD ? '#ffd35a' : 'rgba(255,255,255,.55)';
+  for(let a=0;a<16;a++){ if(zp<0 && a%2) continue; const t=a/16*Math.PI*2; ctx.fillStyle=zc; ctx.fillRect(Math.round(ZX+Math.cos(t)*7),Math.round(ZY+Math.sin(t)*7),1,1); }
+  if(Math.abs(zp-1)<=GOOD){ pxEll(ctx,ZX,ZY,8.5,8.5,'rgba(255,230,90,.18)'); }
   if(tr.phase==='pitch'){
-    const p = (ts-tr.start)/tr.dur, bx = 100 - p*6, by = 84 + p*22, r = .9 + p*2.2;
+    const p = zp, bx = 124 + (ZX-124)*p, by = 80 + (ZY-80)*p - Math.sin(Math.min(p,1)*Math.PI)*6, r = Math.min(3.2, 1 + p*2.2);
     pxEll(ctx,bx,by,r+1,r+1,C.o); pxEll(ctx,bx,by,r,r,'#ffffff');
     if(r>2.4){ ctx.fillStyle=C.r; ctx.fillRect(Math.round(bx)-1,Math.round(by)-1,1,1); ctx.fillRect(Math.round(bx)+1,Math.round(by),1,1); }
   } else if(tr.phase==='fly'){
     const q = Math.min(1,(ts-tr.flyStart)/850);
-    const bx = 92 + q*(tr.flyFar?66:40), by = 104 - q*90 + (tr.flyFar?0:q*q*55);
+    const bx = ZX + q*(tr.flyFar?60:40), by = ZY - q*95 + (tr.flyFar?0:q*q*55);
     ctx.drawImage(BALL(), Math.round(bx)-3, Math.round(by)-3);
   }
 }
@@ -642,20 +647,23 @@ function startTraining(){
   const ts = performance.now();
   tr = {pitch:0,total:5,hits:0,homers:0,phase:'wait',t0:ts+1100,start:0,dur:1000,swingT:0,lastHitT:0,flyStart:0,flyFar:false};
   $('#menu').hidden = true; $('#hud').hidden = true; $('#swingbar').hidden = false; $('#thud').hidden = false; $('#bubble').hidden = true;
-  banner('PLAY BALL!', 1000); updateThud(); $('#swing-btn').focus({preventScroll:true});
+  banner('PLAY BALL!', 1000); say('공이 노란 동그라미에 들어올 때 스윙!', 3500); updateThud(); $('#swing-btn').focus({preventScroll:true});
 }
 const updateThud = () => { if(tr) $('#thud').textContent = `PITCH ${Math.min(tr.pitch+1,tr.total)}/${tr.total} · HIT ${tr.hits}`; };
+const ZX=100, ZY=98, PERFECT=.07, GOOD=.2;
 function updateTraining(ts){
   if(tr.phase==='wait' && ts>=tr.t0){ tr.phase='pitch'; tr.start=ts; tr.swingT=0; tr.dur=Math.max(620, rand(880,1320)-(st.level-1)*25); }
-  else if(tr.phase==='pitch' && (ts-tr.start)/tr.dur > 1.15){ banner(tr.swingT?'MISS':'STRIKE!'); nextPitch(ts); }
+  else if(tr.phase==='pitch' && (ts-tr.start)/tr.dur > 1+GOOD+.15){ banner('STRIKE!'); say('놓쳤어! 공이 동그라미에 들어올 때 눌러 봐'); nextPitch(ts); }
+  else if(tr.phase==='miss' && ts-tr.missT > 700) nextPitch(ts);
   else if(tr.phase==='fly' && ts-tr.flyStart > 900) nextPitch(ts);
 }
 function swing(){
   if(!tr) return; const ts = performance.now();
   if(tr.phase!=='pitch' || tr.swingT) return;
-  tr.swingT = ts; const p = (ts-tr.start)/tr.dur, d = Math.abs(p-.95);
-  if(p>=.78 && d<=.035){ tr.hits++; tr.homers++; tr.lastHitT=ts; tr.phase='fly'; tr.flyStart=ts; tr.flyFar=true; banner('HOMERUN!'); spawn('spark',92,96,5); }
-  else if(p>=.78 && d<=.1){ tr.hits++; tr.lastHitT=ts; tr.phase='fly'; tr.flyStart=ts; tr.flyFar=false; banner('GOOD!'); }
+  tr.swingT = ts; const p = (ts-tr.start)/tr.dur, d = Math.abs(p-1);
+  if(d<=PERFECT){ tr.hits++; tr.homers++; tr.lastHitT=ts; tr.phase='fly'; tr.flyStart=ts; tr.flyFar=true; banner('HOMERUN!'); spawn('spark',ZX,ZY-4,5); }
+  else if(d<=GOOD){ tr.hits++; tr.lastHitT=ts; tr.phase='fly'; tr.flyStart=ts; tr.flyFar=false; banner('GOOD!'); }
+  else { tr.phase='miss'; tr.missT=ts; banner(p<1?'TOO EARLY':'TOO LATE'); say(p<1?'조금 빨랐어! 공이 동그라미에 닿을 때!':'조금 늦었어! 한 박자 빨리!'); }
   updateThud();
 }
 function nextPitch(ts){ tr.pitch++; if(tr.pitch>=tr.total){ endTraining(); return; } tr.phase='wait'; tr.t0=ts+800; updateThud(); }
