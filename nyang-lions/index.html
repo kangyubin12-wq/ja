@@ -338,6 +338,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 <script>
 (() => {
 'use strict';
+let pip = null, pipCtx = null, pipMsg = null, pipBanner = null;
 const $ = s => document.querySelector(s);
 const rand = (a,b) => a + Math.random()*(b-a);
 const pick = a => a[Math.floor(Math.random()*a.length)];
@@ -754,12 +755,12 @@ function update(ts, dt){
 /* speech & banner */
 let bubbleTimer = 0, bannerTimer = 0;
 function say(text, ms=3000){
-  if(pip){ const m=pip.document.querySelector('#m-msg'); if(m) m.textContent=text; }
+  pipMsg = {text, until: performance.now()+Math.max(ms,3000)};
   const b = $('#bubble'); b.textContent = text; b.hidden = false; $('#quote').textContent = `"${text}"`;
   clearTimeout(bubbleTimer); bubbleTimer = setTimeout(()=>{ b.hidden = true; }, ms);
 }
 function banner(text, ms=900){
-  if(pip){ const m=pip.document.querySelector('#m-banner'); if(m){ m.textContent=text; m.hidden=false; clearTimeout(m._t); m._t=setTimeout(()=>{ m.hidden=true; }, ms); } }
+  pipBanner = {text, until: performance.now()+ms};
   const b = $('#banner'); b.textContent = text; b.hidden = false;
   b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
   clearTimeout(bannerTimer); bannerTimer = setTimeout(()=>{ b.hidden = true; }, ms);
@@ -1095,99 +1096,141 @@ function initLooks(){
   };
 }
 
-/* ---------- mini tamagotchi window (Document Picture-in-Picture, Chrome/Edge desktop) ---------- */
-let pip = null, pipCtx = null;
-const MINI_CSS = `
-html,body{margin:0;height:100%;background:#ecebe4;overflow:hidden}
-body{display:flex;align-items:center;justify-content:center;font-family:var(--pix);color:#2c2e3d;-webkit-font-smoothing:none}
-.m-egg{position:relative;box-sizing:border-box;width:calc(100% - 14px);height:calc(100% - 14px);border:3px solid #2c2e3d;border-radius:50% / 32% 32% 38% 38%;
-  background:radial-gradient(110% 80% at 30% 18%,#fff 0%,#f7f5ee 42%,#e4e0d4 84%,#d4cfc0 100%);
-  box-shadow:inset -8px -10px 0 rgba(44,46,61,.09),inset 5px 5px 0 rgba(255,255,255,.9);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;overflow:hidden;padding:18px 12px 14px}
-.m-top{display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:700;font-size:11px;letter-spacing:.14em}
-.m-stripe{position:absolute;top:44%;width:26px;height:12px;background:repeating-linear-gradient(118deg,transparent 0 5px,#5e75a8 5px 9px)}
-.m-stripe.l{left:-3px}.m-stripe.r{right:-3px}
-.m-lcd{background:#e9e7dd;border:3px solid #2c2e3d;border-radius:8px;box-shadow:0 0 0 3px #cbc7b9,0 0 0 5px #2c2e3d;overflow:hidden;display:flex;flex-direction:column}
-.m-screen{position:relative;border-bottom:2px solid #2c2e3d;cursor:pointer;touch-action:manipulation}
-#m-cv{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
-.m-banner{position:absolute;right:4px;top:4px;font-weight:700;font-size:12px;color:#fff;background:#2c2e3d;padding:0 6px;pointer-events:none}
-.m-thud{position:absolute;left:3px;bottom:3px;font-size:9.5px;color:#fff;background:#2c2e3d;padding:0 4px;pointer-events:none}
-.m-msg{font-size:10.5px;line-height:1.5;padding:2px 6px;border-bottom:2px solid #2c2e3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fff}
-.m-stat{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;padding:4px 6px 5px;font-size:10px}
-.m-row{display:flex;align-items:center;gap:4px}
-.m-row svg{flex:none}
-.m-hearts{display:flex;gap:1px}.m-hearts span{display:flex}.m-hearts span.on{color:#d9444f}
-.m-dots{display:flex;gap:4px;align-items:center}
-.m-dots i{width:3px;height:3px;border-radius:50%;background:#2c2e3d;opacity:.5}
-.m-dots i.on{width:6px;height:6px;opacity:1}
-.m-dots.low i.on{background:#c64f5b}
-.m-hw{display:flex;gap:16px;align-items:flex-start}
-.m-hw button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;cursor:pointer;font:inherit;font-weight:700;font-size:9.5px;letter-spacing:.06em;color:#2c2e3d;padding:0}
-.m-hw button span{width:30px;height:30px;border-radius:50%;border:2px solid #2c2e3d;background:radial-gradient(circle at 34% 30%,#c9d6f5 0 14%,#7f97d6 30%,#4f6bb8 72%,#3a559e 100%);box-shadow:0 3px 0 #2c2e3d}
-.m-hw button:nth-child(2){margin-top:9px}
-.m-hw button:active span{transform:translateY(3px);box-shadow:0 0 0 #2c2e3d}
-.m-hw button:focus-visible{outline:2px solid #2f4a9a;outline-offset:2px}
-.m-paw{display:flex}`;
-const MINI_HTML = `
-<div class="m-egg">
-  <span class="m-stripe l"></span><span class="m-stripe r"></span>
-  <div class="m-top"><span class="m-paw"></span><span>CAT BASEBALL CLUB</span></div>
-  <div class="m-lcd" id="m-lcd">
-    <div class="m-screen"><canvas id="m-cv" width="160" height="120"></canvas><div class="m-banner" id="m-banner" hidden></div><div class="m-thud" id="m-thud" hidden></div></div>
-    <div class="m-msg" id="m-msg"></div>
-    <div class="m-stat" id="m-stat"></div>
-  </div>
-  <div class="m-hw">
-    <button type="button" id="m-feed" title="밥 주기"><span></span>FEED</button>
-    <button type="button" id="m-play" title="놀아주기"><span></span>PLAY</button>
-    <button type="button" id="m-care" title="쓰다듬기"><span></span>CARE</button>
-  </div>
-  <span class="m-paw"></span>
-</div>`;
-function pipBtn(k){ if(tr){ swing(); return; } if(st.sleeping && k!=='sleep'){ act(k); return; } act(k); }
-function fitPip(){
-  if(!pip) return;
-  const d = pip.document, W = pip.innerWidth, H = pip.innerHeight;
-  const k = (W >= 430 && H >= 600) ? 2 : 1;
-  const c = d.querySelector('#m-cv'); c.style.width = 160*k+'px'; c.style.height = 120*k+'px';
-  d.querySelector('#m-lcd').style.width = (160*k)+'px';
+/* ---------- mini tamagotchi window (Document Picture-in-Picture, Chrome/Edge desktop) ----------
+   The whole handheld is drawn as pixel art on one canvas, then shown at a whole-number zoom. */
+const DW = 280, DH = 346, INK = '#2c2e3d';
+const LCD = {x:60, y:96, w:160, h:160};
+const BTN = [{k:'feed', x:84, y:282, label:'FEED'}, {k:'play', x:140, y:291, label:'PLAY'}, {k:'pet', x:196, y:282, label:'CARE'}];
+const CELLS = ['feed','play','pet','sleep','train'];
+const DEV = document.createElement('canvas'); DEV.width = DW; DEV.height = DH;
+const dctx = DEV.getContext('2d');
+let devStatic = null; const pressed = {};
+const eggHalf = Y => { const t = (Y+.5-186)/158; if(Math.abs(t) > 1) return -1; return 131*Math.sqrt(1-t*t)*(1+.07*t); };
+const tctx = (()=>{ const c=document.createElement('canvas'); c.width=200; c.height=20; return c.getContext('2d', {willReadFrequently:true}); })();
+/* text without anti-aliasing: draw, then snap alpha to on/off */
+function crispText(x, text, X, Y, col, font='11px Galmuri11, monospace'){
+  tctx.clearRect(0,0,200,20); tctx.font = font; tctx.fillStyle = '#000'; tctx.textBaseline = 'alphabetic'; tctx.fillText(text, 1, 15);
+  const w = Math.min(200, Math.ceil(tctx.measureText(text).width)+3), img = tctx.getImageData(0,0,w,20), d = img.data, c = hex(col);
+  for(let i=0;i<d.length;i+=4){ const on = d[i+3] > 100; d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]= on ? 255 : 0; }
+  tctx.clearRect(0,0,200,20); tctx.putImageData(img,0,0); x.drawImage(tctx.canvas, 0,0,w,20, X-1, Y-15, w, 20);
 }
-function renderPipStats(){
-  if(!pip) return; const box = pip.document.querySelector('#m-stat'); if(!box) return;
-  if(!box.dataset.built){
-    box.dataset.built = '1';
-    box.innerHTML = `<span class="m-row">${pixSvg(ICONS.heart,10)}<span class="m-hearts" id="m-h">${'<span></span>'.repeat(5)}</span></span>` +
-      [['hunger','hunger'],['energy','energy'],['clean','clean']].map(([k,ic])=>`<span class="m-row">${pixSvg(ICONS[ic],10)}<span class="m-dots" id="m-${k}">${'<i></i>'.repeat(5)}</span></span>`).join('');
+function pixMap(x, map, X, Y, col){ x.fillStyle = col; map.forEach((r,j)=>[...r].forEach((ch,i)=>{ if(ch==='#') x.fillRect(X+i, Y+j, 1, 1); })); }
+function pxRRect(x, X, Y, w, h, r, col){ x.fillStyle = col; for(let j=0;j<h;j++){ const dy = j<r ? r-j-.5 : j>=h-r ? j-(h-r)+.5 : 0; const ins = dy ? Math.round(r - Math.sqrt(Math.max(0, r*r-dy*dy))) : 0; x.fillRect(X+ins, Y+j, w-2*ins, 1); } }
+function pxDisc(x, cx, cy, r, col){ x.fillStyle = col; for(let j=-r;j<=r;j++){ const hw = Math.round(Math.sqrt(Math.max(0, r*r-(j*j)))); x.fillRect(cx-hw, cy+j, hw*2+1, 1); } }
+function buildDevStatic(){
+  const c = document.createElement('canvas'); c.width = DW; c.height = DH; const x = c.getContext('2d');
+  const img = x.createImageData(DW, DH), d = img.data;
+  const inside = (X,Y) => { if(Y<0 || Y>=DH) return false; const h = eggHalf(Y); return h >= 0 && Math.abs(X+.5-140) <= h; };
+  const put = (X,Y,col) => { const i=(Y*DW+X)*4; d[i]=col[0]; d[i+1]=col[1]; d[i+2]=col[2]; d[i+3]=255; };
+  const C1=hex('#fdfcf8'), C2=hex('#f3f0e7'), C3=hex('#e4e0d4'), C4=hex('#d3cdbe'), IK=hex(INK), SN=hex('#4f65a0'), SL=hex('#dfe4f0'), SE=hex('#9aa4c0');
+  for(let Y=0;Y<DH;Y++) for(let X=0;X<DW;X++){
+    if(!inside(X,Y)) continue;
+    let edge = false; for(const [p,q] of [[2,0],[-2,0],[0,2],[0,-2],[1,1],[-1,-1],[1,-1],[-1,1]]) if(!inside(X+p,Y+q)){ edge = true; break; }
+    if(edge){ put(X,Y,IK); continue; }
+    const h = eggHalf(Y), u = (X+.5-140)/h, v = (Y+.5-186)/158, l = u*.55+v*.62, ck = (X+Y)&1;
+    let col = l<-.6?C1 : l<-.5?(ck?C1:C2) : l<.38?C2 : l<.48?(ck?C2:C3) : l<.72?C3 : l<.8?(ck?C3:C4) : C4;
+    if(Y>=152 && Y<164 && (X < LCD.x-12 || X >= LCD.x+LCD.w+12)){ col = Y===152||Y===163 ? SE : ((X+Y)%8 < 4 ? SN : SL); }
+    put(X,Y,col);
   }
-  box.querySelectorAll('#m-h span').forEach((s,i)=>{ const on = st.happy >= i*20+10; s.innerHTML = pixSvg(on?ICONS.heart:ICONS.heartE,10); s.classList.toggle('on',on); });
-  ['hunger','energy','clean'].forEach(k=>{ const el = box.querySelector('#m-'+k); el.classList.toggle('low', st[k]<25); el.querySelectorAll('i').forEach((s,i)=>s.classList.toggle('on', i < Math.round(st[k]/20))); });
+  x.putImageData(img, 0, 0);
+  // key ring above the shell
+  for(let Y=0;Y<34;Y++) for(let X=124;X<157;X++){ if(inside(X,Y)) continue; const e=((X+.5-140)/13)**2+((Y+.5-15)/13)**2, e2=((X+.5-140)/8.5)**2+((Y+.5-15)/8.5)**2; if(e<=1 && e2>=1){ x.fillStyle = e>.78||e2<1.25 ? INK : '#f3f0e7'; x.fillRect(X,Y,1,1); } }
+  // paw + arched title
+  pixMap(x, ICONS.paw, 136, 36, INK);
+  x.font = '700 11px Galmuri11, monospace'; x.textBaseline = 'alphabetic'; x.fillStyle = INK;
+  const title = 'CAT BASEBALL CLUB'; const ws = [...title].map(ch => Math.ceil(x.measureText(ch).width)+1); const tw = ws.reduce((a,b)=>a+b,0)-1;
+  let tx = Math.round(140 - tw/2);
+  [...title].forEach((ch,i)=>{ const cx = tx + ws[i]/2; const y = Math.round(66 + ((cx-140)/96)**2*11); crispText(x, ch, tx, y, INK, '700 11px Galmuri11, monospace'); tx += ws[i]; });
+  // screen bezel: ink / grey frame / ink / lcd
+  const bx = LCD.x-10, by = LCD.y-10, bw = LCD.w+20, bh = LCD.h+20;
+  pxRRect(x, bx, by, bw, bh, 12, INK); pxRRect(x, bx+2, by+2, bw-4, bh-4, 10, '#c3beb1'); pxRRect(x, bx+3, by+3, bw-6, 2, 1, '#d8d4c9');
+  pxRRect(x, LCD.x-2, LCD.y-2, LCD.w+4, LCD.h+4, 4, INK);
+  // buttons + labels
+  x.font = '700 11px Galmuri11, monospace';
+  BTN.forEach(b=>{ const w = Math.ceil(x.measureText(b.label).width); crispText(x, b.label, Math.round(b.x - w/2), b.y + 26, INK, '700 11px Galmuri11, monospace'); });
+  pixMap(x, ICONS.paw, 136, 324, INK);
+  devStatic = c;
 }
-function pipThud(){ if(!pip) return; const t = pip.document.querySelector('#m-thud'); if(!t) return; if(tr){ t.hidden=false; t.textContent = `${tr.pt && tr.phase==='pitch' ? tr.pt.n+' · ' : ''}${Math.min(tr.pitch+1,tr.total)}/${tr.total}구 ${tr.hits}안타`; } else t.hidden = true; }
+function drawButton(b, down){
+  const y = b.y + (down ? 2 : 0);
+  if(!down) pxDisc(dctx, b.x, b.y+2, 13, INK);
+  pxDisc(dctx, b.x, y, 13, INK); pxDisc(dctx, b.x, y, 11, '#5f7bc6'); pxDisc(dctx, b.x-1, y-1, 9, '#7f98d8'); pxDisc(dctx, b.x-4, y-4, 4, '#b9c8ef'); dctx.fillStyle='#e8eefc'; dctx.fillRect(b.x-6, y-6, 2, 2);
+}
+function renderDevice(ts){
+  if(!devStatic) buildDevStatic();
+  dctx.imageSmoothingEnabled = false;
+  dctx.clearRect(0,0,DW,DH); dctx.drawImage(devStatic, 0, 0);
+  BTN.forEach(b => drawButton(b, pressed[b.k] && ts - pressed[b.k] < 160));
+  const X = LCD.x, Y = LCD.y;
+  dctx.fillStyle = '#e8e6dc'; dctx.fillRect(X, Y, LCD.w, LCD.h);
+  // top info row
+  dctx.fillStyle = INK; dctx.font = '11px Galmuri11, monospace';
+  pixMap(dctx, ['.###.','#.#.#','#.#.#','#.#.#','.###.'], X+4, Y+3, INK);
+  const d = new Date(), tstr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  crispText(dctx, tstr, X+108, Y+11, INK);
+  dctx.fillRect(X+140, Y+3, 13, 1); dctx.fillRect(X+140, Y+8, 13, 1); dctx.fillRect(X+140, Y+3, 1, 6); dctx.fillRect(X+152, Y+3, 1, 6); dctx.fillRect(X+153, Y+5, 1, 2);
+  for(let i=0;i<3;i++) dctx.fillRect(X+142+i*3, Y+5, 2, 2);
+  dctx.fillRect(X, Y+12, LCD.w, 1);
+  // game scene
+  dctx.drawImage(cv, X, Y+13);
+  dctx.fillStyle = INK; dctx.fillRect(X, Y+133, LCD.w, 1);
+  // status row: happiness hearts + level
+  for(let i=0;i<5;i++) pixMap(dctx, ['.#.#.','#####','#####','.###.','..#..'], X+4+i*8, Y+137, st.happy >= i*20+10 ? '#d9444f' : '#b6b2a6');
+  const mini = [['hunger',46],['energy',78],['clean',110]];
+  mini.forEach(([k,ox])=>{ const on = Math.round(st[k]/20); for(let i=0;i<5;i++){ dctx.fillStyle = i<on ? (st[k]<25 ? '#c64f5b' : INK) : '#b6b2a6'; dctx.fillRect(X+ox+i*5, Y+139, 3, 3); } });
+  crispText(dctx, `LV${st.level}`, X+138, Y+145, INK);
+  dctx.fillRect(X, Y+146, LCD.w, 1);
+  // icon row
+  for(let i=0;i<5;i++){
+    const cx = X + i*32; if(i) dctx.fillRect(cx, Y+147, 1, 13);
+    const ic = ICONS[TOOL_IC[CELLS[i]] || CELLS[i]]; const w = ic[0].length, h = ic.length;
+    pixMap(dctx, ic, cx + 16 - Math.floor(w/2), Y + 147 + Math.floor((13-h)/2) + (h>11?0:0), INK);
+  }
+  // overlays on the scene
+  dctx.font = '11px Galmuri11, monospace';
+  if(pipMsg && ts < pipMsg.until && !tr){
+    let t = pipMsg.text; while(dctx.measureText(t).width > 146 && t.length > 2) t = t.slice(0,-2)+'…';
+    const w = Math.ceil(dctx.measureText(t).width) + 8;
+    dctx.fillStyle = INK; dctx.fillRect(X+3, Y+16, w+2, 15); dctx.fillStyle = '#fff'; dctx.fillRect(X+4, Y+17, w, 13);
+    dctx.fillStyle = INK; dctx.fillRect(X+10, Y+31, 3, 1); dctx.fillRect(X+11, Y+32, 1, 1); crispText(dctx, t, X+8, Y+28, INK);
+  }
+  if(pipBanner && ts < pipBanner.until){ const w = Math.ceil(dctx.measureText(pipBanner.text).width) + 8; dctx.fillStyle = INK; dctx.fillRect(X+LCD.w-w-4, Y+17, w, 14); crispText(dctx, pipBanner.text, X+LCD.w-w, Y+28, '#ffffff'); }
+  if(tr){ const t = `${Math.min(tr.pitch+1,tr.total)}/${tr.total}구 ${tr.hits}안타`; const w = Math.ceil(dctx.measureText(t).width)+6; dctx.fillStyle = INK; dctx.fillRect(X+2, Y+118, w, 13); crispText(dctx, t, X+5, Y+129, '#ffffff'); }
+}
+function renderPipStats(){}
+function pipThud(){}
+function pipPress(k){ pressed[k] = performance.now(); if(tr){ swing(); return; } act(k); }
+function fitPip(){
+  if(!pip) return; const W2 = pip.innerWidth, H2 = pip.innerHeight;
+  const k = Math.max(1, Math.min(Math.floor((W2-8)/DW), Math.floor((H2-8)/DH)));
+  const c = pip.document.querySelector('#m-dev'); c.style.width = DW*k+'px'; c.style.height = DH*k+'px';
+}
 async function openPip(){
   if(pip){ pip.focus && pip.focus(); return; }
   try{
-    const w = await documentPictureInPicture.requestWindow({width:300, height:440});
+    try{ await document.fonts.load('700 11px Galmuri11'); await document.fonts.load('11px Galmuri11'); }catch(e){}
+    devStatic = null;
+    const w = await documentPictureInPicture.requestWindow({width: DW+16, height: DH+16});
     pip = w;
-    document.querySelectorAll('style').forEach(el=>w.document.head.appendChild(el.cloneNode(true)));
-    const css = w.document.createElement('style'); css.textContent = MINI_CSS; w.document.head.appendChild(css);
-    w.document.title = '냥이 라이온즈';
-    w.document.body.innerHTML = MINI_HTML;
-    const q = sel => w.document.querySelector(sel);
-    w.document.querySelectorAll('.m-paw').forEach(el=>el.innerHTML = pixSvg(ICONS.paw,12));
-    pipCtx = q('#m-cv').getContext('2d');
-    q('#m-feed').addEventListener('click', ()=>pipBtn('feed'));
-    q('#m-play').addEventListener('click', ()=>pipBtn('play'));
-    q('#m-care').addEventListener('click', ()=>pipBtn('pet'));
-    q('#m-cv').addEventListener('pointerdown', e=>{
-      if(tr){ e.preventDefault(); swing(); return; }
-      const r = e.currentTarget.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
-      if(Math.abs(x-catX) < 24 && y > GROUND-92 && y < GROUND+3) act('pet');
+    const css = w.document.createElement('style');
+    css.textContent = 'html,body{margin:0;height:100%;background:#ecebe4;overflow:hidden}body{display:flex;align-items:center;justify-content:center}#m-dev{display:block;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer;touch-action:manipulation}';
+    w.document.head.appendChild(css); w.document.title = '냥이 라이온즈';
+    w.document.body.innerHTML = `<canvas id="m-dev" width="${DW}" height="${DH}" role="img" aria-label="냥이 라이온즈 미니 기기"></canvas>`;
+    const dev = w.document.querySelector('#m-dev'); pipCtx = dev.getContext('2d');
+    dev.addEventListener('pointerdown', e=>{
+      const r = dev.getBoundingClientRect(), px = (e.clientX-r.left)/r.width*DW, py = (e.clientY-r.top)/r.height*DH;
+      const b = BTN.find(b => (px-b.x)**2 + (py-b.y)**2 <= 16*16); if(b){ e.preventDefault(); pipPress(b.k); return; }
+      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+147 && py<LCD.y+LCD.h){ const k = CELLS[Math.floor((px-LCD.x)/32)]; pressed[k]=performance.now(); if(tr){ swing(); return; } act(k); return; }
+      if(px>=LCD.x && px<LCD.x+LCD.w && py>=LCD.y+13 && py<LCD.y+133){
+        if(tr){ e.preventDefault(); swing(); return; }
+        const gx = px-LCD.x, gy = py-LCD.y-13; if(Math.abs(gx-catX) < 24 && gy > GROUND-92 && gy < GROUND+3) act('pet');
+      }
     });
     w.document.addEventListener('keydown', e=>{ if(tr && (e.code==='Space'||e.key===' ')){ e.preventDefault(); swing(); } });
     w.addEventListener('resize', fitPip);
     w.addEventListener('pagehide', ()=>{ pip = null; pipCtx = null; $('#pip-note').hidden = true; $('#pip-btn').hidden = false; });
-    fitPip(); renderPipStats(); pipThud();
-    q('#m-msg').textContent = $('#bubble').hidden ? `${st.name}(이)가 옆에서 지켜보고 있어요` : $('#bubble').textContent;
+    fitPip();
+    pipMsg = {text: `${st.name}(이)가 옆에서 지켜보고 있어요`, until: performance.now()+4000};
     $('#pip-note').hidden = false; $('#pip-btn').hidden = true;
   }catch(err){
     pip = null; pipCtx = null;
@@ -1205,7 +1248,7 @@ function loop(ts){
   if(acc >= 1000){ decay(acc/60000); acc = 0; renderAll(); renderClock(); }
   if(saveAcc > 5000){ save(); saveAcc = 0; }
   update(ts, dt); draw(ts);
-  if(pipCtx){ pipCtx.imageSmoothingEnabled=false; pipCtx.drawImage(cv,0,0); }
+  if(pipCtx){ renderDevice(ts); pipCtx.imageSmoothingEnabled=false; pipCtx.clearRect(0,0,DW,DH); pipCtx.drawImage(DEV,0,0); }
   requestAnimationFrame(loop);
 }
 renderAll(); renderLog(); renderClock();
