@@ -1098,9 +1098,9 @@ function initLooks(){
 
 /* ---------- mini tamagotchi window (Document Picture-in-Picture, Chrome/Edge desktop) ----------
    The whole handheld is drawn as pixel art on one canvas, then shown at a whole-number zoom. */
-const DW = 360, DH = 488, INK = '#2c2e3d', ECX = 177, ECY = 252, ERX = 169, ERY = 224;
-const LCD = {x:97, y:138, w:160, h:160};
-const BTN = [{k:'feed', x:113, y:364, label:'FEED'}, {k:'play', x:177, y:378, label:'PLAY'}, {k:'pet', x:241, y:364, label:'CARE'}];
+const DW = 330, DH = 458, INK = '#2c2e3d', ECX = 160, ECY = 234, ERX = 148, ERY = 210;
+const LCD = {x:80, y:134, w:160, h:160};
+const BTN = [{k:'feed', x:104, y:344, label:'FEED'}, {k:'play', x:160, y:356, label:'PLAY'}, {k:'pet', x:216, y:344, label:'CARE'}];
 const CELLS = ['feed','play','pet','sleep','train'];
 const DEV = document.createElement('canvas'); DEV.width = DW; DEV.height = DH;
 const dctx = DEV.getContext('2d');
@@ -1150,17 +1150,20 @@ function buildDevStatic(){
       let sc = (Y===LCD.y+68 || Y===LCD.y+83) ? hex('#8f99b6') : ((X+Y)%10 < 5 ? SN : SL);
       col = mix(sc, BK, Math.max(0, .55 - I) * .7);
     }
+    // fine grain: a few barely-visible specks in the plastic
+    const hsh = Math.sin(X*12.9898 + Y*78.233) * 43758.5453, n = hsh - Math.floor(hsh);
+    if(n < .07) col = col.map(v=>Math.max(0, v-7)); else if(n > .965) col = col.map(v=>Math.min(255, v+5)); else if(n > .5 && n < .53) col = col.map(v=>Math.max(0, v-4));
     put(X,Y,col);
   }
   x.putImageData(img, 0, 0);
   // key ring
   for(let Y=0;Y<40;Y++) for(let X=ECX-18;X<ECX+19;X++){ if(inside(X,Y)) continue; const e=((X+.5-ECX)/15)**2+((Y+.5-18)/15)**2, e2=((X+.5-ECX)/9.5)**2+((Y+.5-18)/9.5)**2; if(e<=1 && e2>=1){ const lit = (X-ECX) + (Y-18) < -4; x.fillStyle = e>.8||e2<1.2 ? INK : (lit ? '#fbfaf6' : '#d7d2c6'); x.fillRect(X,Y,1,1); } }
   // paw + arched title
-  pixMap(x, ICONS.paw, ECX-4, 70, INK);
+  pixMap(x, ICONS.paw, ECX-4, 52, INK);
   const title = 'CAT BASEBALL CLUB'; x.font = '700 11px Galmuri11, monospace';
   const ws = [...title].map(ch => Math.ceil(x.measureText(ch).width)+2); const tw = ws.reduce((a,b)=>a+b,0)-2;
   let tx = Math.round(ECX - tw/2);
-  [...title].forEach((ch,i)=>{ const cx = tx + ws[i]/2; const y = Math.round(104 + ((cx-ECX)/110)**2*13); crispText(x, ch, tx, y, INK, '700 11px Galmuri11, monospace'); tx += ws[i]; });
+  [...title].forEach((ch,i)=>{ const cx = tx + ws[i]/2; const y = Math.round(92 + ((cx-ECX)/100)**2*12); crispText(x, ch, tx, y, INK, '700 11px Galmuri11, monospace'); tx += ws[i]; });
   // recessed screen bezel
   pxRRect(x, bz.x, bz.y, bz.w, bz.h, 16, INK);
   pxRRect(x, bz.x+2, bz.y+2, bz.w-4, bz.h-4, 14, '#d8d3c7');
@@ -1170,13 +1173,13 @@ function buildDevStatic(){
   pxRRect(x, LCD.x-3, LCD.y-3, LCD.w+6, LCD.h+6, 5, '#8e887a');
   pxRRect(x, LCD.x-2, LCD.y-2, LCD.w+4, LCD.h+4, 4, INK);
   // button wells (soft shadow on the shell) + labels
-  BTN.forEach(b=>{ pxDisc(x, b.x+2, b.y+5, 19, '#c9c3b5'); pxDisc(x, b.x+1, b.y+3, 18, '#d6d1c5'); });
-  BTN.forEach(b=>{ const w = Math.ceil(x.measureText(b.label).width); crispText(x, b.label, Math.round(b.x - w/2), b.y + 34, INK, '700 11px Galmuri11, monospace'); });
-  pixMap(x, ICONS.paw, ECX-4, 436, INK);
+  BTN.forEach(b=>{ pxDisc(x, b.x+2, b.y+5, 18, '#c9c3b5'); pxDisc(x, b.x+1, b.y+3, 17, '#d6d1c5'); });
+  BTN.forEach(b=>{ const w = Math.ceil(x.measureText(b.label).width); crispText(x, b.label, Math.round(b.x - w/2), b.y + 32, INK, '700 11px Galmuri11, monospace'); });
+  pixMap(x, ICONS.paw, ECX-4, 404, INK);
   devStatic = c;
 }
 function drawButton(b, down){
-  const R = 16, oy = down ? 3 : 0, cx = b.x, cy = b.y + oy;
+  const R = 15, oy = down ? 3 : 0, cx = b.x, cy = b.y + oy;
   if(!down) pxDisc(dctx, cx, b.y+3, R, INK);
   pxDisc(dctx, cx, cy, R, INK);
   const BL = ['#28407e','#34509a','#4461b0','#5876c3','#728fd3','#93acE3','#bfd0f3'];
