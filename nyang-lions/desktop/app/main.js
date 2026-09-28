@@ -1,5 +1,12 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, net, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+// 이름이 꾹꾹이즈로 바뀌어도 예전(NyangLions) 저장 기록을 그대로 쓰기
+app.setName('꾹꾹이즈');
+app.setPath('userData', path.join(app.getPath('appData'), 'NyangLions'));
+
+const UPDATE_BASE = 'https://kangyubin12-wq.github.io/ja/nyang-lions/desktop/app/';
 
 let win = null, big = null, tray = null, quitting = false;
 if (!app.requestSingleInstanceLock()) { app.quit(); }
@@ -61,6 +68,7 @@ function menuTemplate(s) {
     { label: '항상 위에 두기', type: 'checkbox', checked: win.isAlwaysOnTop(), click: (m) => win.setAlwaysOnTop(m.checked, 'floating') },
     { label: 'PC 켤 때 자동 실행', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin, click: (m) => app.setLoginItemSettings({ openAtLogin: m.checked }) },
     { label: '숨기기', click: () => win.hide() },
+    { label: '업데이트 확인 (지금 v' + app.getVersion() + ')', click: () => checkUpdate(true) },
     { type: 'separator' },
     { label: '종료', click: () => { quitting = true; app.quit(); } }
   ];
@@ -75,6 +83,7 @@ function createTray() {
     { label: '고양이 보이기', click: () => { if (!big) win.show(); } },
     { label: '크게 열기', click: openBig },
     { label: '고양이 숨기기', click: () => { win.hide(); } },
+    { label: '업데이트 확인', click: () => checkUpdate(true) },
     { label: '오른쪽 아래로 옮기기', click: () => { const wa = screen.getPrimaryDisplay().workArea; const [w, h] = win.getSize(); win.setPosition(wa.x + wa.width - w - 30, wa.y + wa.height - h - 30); win.show(); } },
     { type: 'separator' },
     { label: '종료', click: () => { quitting = true; app.quit(); } }
@@ -83,9 +92,47 @@ function createTray() {
   tray.on('click', () => { win.isVisible() ? win.hide() : win.show(); });
 }
 
+// ---- 자동 업데이트: 깃허브에 올라간 새 버전 파일을 받아 교체하고 다시 켜기 ----
+function newer(a, b) {
+  const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+  for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
+  return false;
+}
+async function getBuf(url) {
+  const r = await net.fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+  if (!r.ok) throw new Error(url + ' ' + r.status);
+  return Buffer.from(await r.arrayBuffer());
+}
+let updating = false;
+async function checkUpdate(manual) {
+  if (updating) return; updating = true;
+  try {
+    const info = JSON.parse((await getBuf(UPDATE_BASE + 'version.json')).toString('utf8'));
+    if (!newer(info.version, app.getVersion())) {
+      if (manual) dialog.showMessageBox({ type: 'info', title: '꾹꾹이즈', message: '이미 최신 버전이에요 (v' + app.getVersion() + ')' });
+      return;
+    }
+    const got = [];
+    for (const f of info.files) {
+      const b = await getBuf(UPDATE_BASE + f);
+      if (!b.length) throw new Error(f + ' empty');
+      got.push([f, b]);
+    }
+    for (const [f, b] of got) fs.writeFileSync(path.join(__dirname, f + '.new'), b);
+    for (const [f] of got) fs.renameSync(path.join(__dirname, f + '.new'), path.join(__dirname, f));
+    send({ t: 'freeze' }); if (big) big.webContents.send('cmd', { t: 'freeze' });
+    if (manual) await dialog.showMessageBox({ type: 'info', title: '꾹꾹이즈', message: '새 버전 v' + info.version + ' 으로 업데이트했어요!\n' + (info.note || '') + '\n\n확인을 누르면 다시 켜져요.' });
+    setTimeout(() => { quitting = true; app.relaunch(); app.exit(0); }, 400);
+  } catch (e) {
+    if (manual) dialog.showMessageBox({ type: 'warning', title: '꾹꾹이즈', message: '업데이트를 확인하지 못했어요.\n인터넷 연결을 확인해 주세요.\n\n(' + e.message + ')' });
+  } finally { updating = false; }
+}
+
 app.whenReady().then(() => {
   if (process.platform === 'win32') app.setAppUserModelId('com.nyanglions.pet');
   createWindow(); createTray();
+  setTimeout(() => checkUpdate(false), 15000);
+  setInterval(() => checkUpdate(false), 6 * 3600 * 1000);
 });
 app.on('before-quit', () => { quitting = true; });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
