@@ -53,7 +53,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .batt{display:inline-block;width:20px;height:10px;border:2px solid var(--ink);position:relative;vertical-align:-1px;margin-left:6px;background:linear-gradient(90deg,var(--ink) 0 72%,transparent 72%)}
 .batt::after{content:"";position:absolute;right:-5px;top:1px;width:3px;height:4px;background:var(--ink)}
 .screen{position:relative;overflow:hidden;background:#e9ebe8;touch-action:manipulation;cursor:pointer}
-.screen canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;image-rendering:pixelated;image-rendering:crisp-edges}
+.screen canvas{display:block;margin:0 auto;width:100%;height:auto;aspect-ratio:4/3;image-rendering:pixelated;image-rendering:crisp-edges}
 .bubble{position:absolute;top:8px;left:8px;max-width:70%;padding:4px 10px;background:#fff;border:2px solid var(--ink);border-radius:8px;font-size:13px;line-height:1.45;box-shadow:2px 2px 0 var(--ink);pointer-events:none}
 .bubble::after{content:"";position:absolute;left:18px;bottom:-7px;width:9px;height:9px;background:#fff;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
 .banner{position:absolute;right:8px;top:8px;font-weight:700;font-size:clamp(16px,5vw,22px);letter-spacing:.06em;color:#fff;background:var(--ink);border:2px solid #fff;outline:2px solid var(--ink);padding:1px 10px;white-space:nowrap;pointer-events:none}
@@ -93,7 +93,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .card h2 .l{display:flex;align-items:center;gap:8px}
 .card h2 small{font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.06em}
 .profile{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
-.avatar{width:96px;height:88px;border:3px solid var(--ink);border-radius:4px;background:#e9ebe8;image-rendering:pixelated}
+.avatar{width:96px;height:96px;border:3px solid var(--ink);border-radius:4px;background:#e9ebe8;image-rendering:pixelated}
 .facts{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;margin:0}
 .facts dt{color:var(--muted)}
 .facts dd{margin:0}
@@ -118,12 +118,12 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .stat.low .nm{color:var(--warn)}
 .stat .cap{font-size:11.5px;color:var(--muted)}
 .dream{display:flex;gap:12px;align-items:center;margin-top:10px;padding-top:12px;border-top:2px solid var(--line);font-size:12.5px}
-.dream canvas{width:44px;height:40px;image-rendering:pixelated;flex:none}
+.dream canvas{width:48px;height:48px;image-rendering:pixelated;flex:none}
 
-.moods{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.moods{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
 .moods figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;border-radius:4px;border:2px solid transparent}
 .moods figure.cur{border-color:var(--ink);background:#fff}
-.moods canvas{width:100%;max-width:64px;aspect-ratio:1;image-rendering:pixelated}
+.moods canvas{width:96px;height:96px;image-rendering:pixelated}
 .moods figcaption{font-size:11px;color:var(--muted)}
 .moods figure.cur figcaption{color:var(--ink);font-weight:700}
 .moods-note{margin:8px 0 0;font-size:12px;color:var(--muted)}
@@ -135,7 +135,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
 .foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
 .reset{padding:5px 12px;border:2px solid var(--ink);border-radius:6px;background:#fff;cursor:pointer;font-size:13px}
 .reset.armed{background:var(--warn);color:#fff}
-@media (max-width:420px){.moods{grid-template-columns:repeat(3,1fr)}}
+
 @media (prefers-reduced-motion:reduce){.banner.pop{animation:none}}
 </style>
 
@@ -188,7 +188,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
       <div class="card">
         <h2><span class="l">상태 보기</span><small id="grade">연습생</small></h2>
         <div class="profile">
-          <canvas class="avatar" id="avatar" width="48" height="44" aria-hidden="true"></canvas>
+          <canvas class="avatar" id="avatar" width="48" height="48" aria-hidden="true"></canvas>
           <dl class="facts">
             <dt>이름</dt><dd><input class="name-input" id="name-input" maxlength="8" aria-label="고양이 이름"></dd>
             <dt>종류</dt><dd>고양이</dd>
@@ -206,7 +206,7 @@ h1{margin:0;font-family:var(--pix);font-weight:700;font-size:clamp(28px,6vw,38px
       <div class="card">
         <h2><span class="l">상태</span><small id="cond">컨디션 --</small></h2>
         <div class="stats" id="stats"></div>
-        <div class="dream"><canvas id="dream" width="48" height="44" aria-hidden="true"></canvas><span id="dream-text">지금 이 고양이는 주전 선수의 꿈을 향해 달려가는 중!</span></div>
+        <div class="dream"><canvas id="dream" width="48" height="48" aria-hidden="true"></canvas><span id="dream-text">지금 이 고양이는 주전 선수의 꿈을 향해 달려가는 중!</span></div>
       </div>
 
       <div class="card">
@@ -287,12 +287,12 @@ function toCanvas(G){
 }
 
 /* ---- the cat comes from a sprite sheet (72x72 cells, feet on row 69, head centred at x=34) ---- */
-const FRAMES=['normal','happy','eat','play','sleep','tired','hungry','angry','dirty','injured','cheer','excited','water','gift'];
-const FACE2FRAME={normal:'normal',blink:'normal',happy:'happy',closed:'happy',eat:'eat',sleep:'sleep',tired:'tired',hungry:'hungry',angry:'angry',dirty:'dirty'};
+const FRAMES=['normal','happy','eat','play','sleep','tired','hungry','angry'];
+const FACE2FRAME={normal:'normal',blink:'normal',happy:'happy',closed:'happy',eat:'eat',play:'play',sleep:'sleep',tired:'tired',hungry:'hungry',angry:'angry',dirty:'normal',cheer:'normal',excited:'happy',gift:'happy'};
 const frameCache={}; let sheetReady=false;
 const SHEET=new Image();
 SHEET.onload=()=>{
-  FRAMES.forEach((k,i)=>{ const c=document.createElement('canvas'); c.width=72; c.height=72; c.getContext('2d').drawImage(SHEET,i*72,0,72,72,0,0,72,72); frameCache[k]=c; });
+  FRAMES.forEach((k,i)=>{ const c=document.createElement('canvas'); c.width=48; c.height=48; c.getContext('2d').drawImage(SHEET,i*48,0,48,48,0,0,48,48); frameCache[k]=c; });
   sheetReady=true; drawThumbs(); lastAvatarKey=''; renderAll();
 };
 SHEET.src='cat-sprites.png';
@@ -342,7 +342,7 @@ const cache = new Map();
 const spr = (key, fn) => { if(!cache.has(key)) cache.set(key, toCanvas(fn())); return cache.get(key); };
 const catSpr = face => frame(face);
 const BOWL = () => spr('bowl', buildBowl), BALL = () => spr('ball', buildBall), HAND = () => spr('hand', buildHand);
-const BAT_SW = () => spr('batsw', ()=>buildBat('swing')), COMB = () => spr('comb', buildComb);
+const BAT_UP = () => spr('batup', ()=>buildBat('up')), BAT_SW = () => spr('batsw', ()=>buildBat('swing')), COMB = () => spr('comb', buildComb);
 
 /* small particle maps */
 const MAPS = {
@@ -494,10 +494,11 @@ const LINES = {
 function spawn(type,x,y,n=1,opt={}){
   for(let i=0;i<n;i++) particles.push({type, x:x+rand(-8,8), y:y+rand(-3,3), vx:opt.vx??rand(-.15,.15), vy:opt.vy??rand(-.45,-.2), life:opt.life??rand(900,1400), max:opt.life??1400, g:opt.g||0});
 }
-function drawCat(x, sprite, bob=0, h=69, cx=34){
+function drawCat(x, sprite, bob=0, h=46, cx=22){
   if(!sprite) return;
   pxEll(ctx, x, GROUND+.5, 16, 2.2, 'rgba(44,46,61,.16)');
-  ctx.drawImage(sprite, Math.round(x)-cx, GROUND-h+bob);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sprite, Math.round(x)-cx*2, GROUND+1-(h+1)*2+bob, sprite.width*2, sprite.height*2);
 }
 
 function draw(ts){
@@ -528,28 +529,21 @@ function drawIdle(ts, night){
     const q = (ts-anim.start)/anim.dur;
     if(q>.7) bob = -Math.round(Math.sin((q-.7)/.3*Math.PI)*6);
     drawCat(catX, frame('play'), bob);
-    const bx = 150 - q*(150-(catX+14)), by = GROUND-7 - Math.abs(Math.sin(q*Math.PI*3))*18;
-    ctx.drawImage(BALL(), Math.round(bx)-3, Math.round(by)-3);
     return;
   }
   const face = faceNow(ts);
   if(anim && anim.type==='gift'){ drawCat(catX, frame('gift'), bob); return; }
   drawCat(catX, frame(face), bob);
-  if(!anim && face==='angry') drawMap(ctx, MAPS.anger, Math.round(catX)+18, GROUND-62);
+  if(!anim && face==='angry') drawMap(ctx, MAPS.anger, Math.round(catX)+24, GROUND-84);
   if(anim && anim.type==='pet'){
     const k = Math.abs(Math.sin((ts-anim.start)/130));
-    ctx.drawImage(HAND(), Math.round(catX)-12, GROUND-70 + Math.round(k*4));
+    ctx.drawImage(HAND(), Math.round(catX)-12, GROUND-88 + Math.round(k*4));
   }
   if(anim && anim.type==='brush'){
     const q = (ts-anim.start)/anim.dur;
     ctx.drawImage(COMB(), Math.round(catX - 20 + (Math.sin(q*Math.PI*5)*.5+.5)*24), GROUND-24);
   }
-  if(!anim && face==='hungry'){
-    const bx = Math.round(catX)+16, by = GROUND-74;
-    ctx.fillStyle=C.o; pxEll(ctx,bx+2,by+16,1.6,1.6,C.o); pxEll(ctx,bx+6,by+11,2.3,2.3,C.o);
-    pxEll(ctx,bx+13,by+3,9,5.5,C.o); pxEll(ctx,bx+13,by+3,8,4.5,'#ffffff'); pxEll(ctx,bx+6,by+11,1.3,1.3,'#ffffff');
-    drawMap(ctx, MAPS.fish, bx+10, by+2);
-  }
+  if(dirty && !anim){ ctx.fillStyle='#9d968a'; [[-12,-20],[-8,-16],[10,-24],[14,-10],[-16,-8],[4,-36]].forEach(([dx,dy])=>ctx.fillRect(Math.round(catX)+dx,GROUND+dy,2,2)); }
 }
 function drawTraining(ts){
   const cx = 58, dirty = st.clean < 25;
@@ -558,8 +552,8 @@ function drawTraining(ts){
   pxEll(ctx,100,86,11,2.2,'#cfc6b1'); ctx.fillStyle='#f7f5ee'; ctx.fillRect(98,85,4,1);
   const swinging = tr.swingT && ts-tr.swingT < 220;
   const hit = tr.lastHitT && ts-tr.lastHitT<900;
-  if(swinging){ drawCat(cx, frame('excited')); ctx.drawImage(BAT_SW(), cx+2, GROUND-20); }
-  else drawCat(cx, frame(hit?'excited':'cheer'));
+  drawCat(cx, frame(hit?'happy':'normal'));
+  if(swinging) ctx.drawImage(BAT_SW(), cx+8, GROUND-22); else ctx.drawImage(BAT_UP(), cx+12, GROUND-50);
   if(tr.phase==='pitch'){
     const p = (ts-tr.start)/tr.dur, bx = 100 - p*6, by = 84 + p*22, r = .9 + p*2.2;
     pxEll(ctx,bx,by,r+1,r+1,C.o); pxEll(ctx,bx,by,r,r,'#ffffff');
@@ -711,17 +705,17 @@ hudEl.innerHTML = `<span class="hearts" id="hud-h">${'<span></span>'.repeat(5)}<
 const heartSvg = on => pixSvg(on?ICONS.heart:ICONS.heartE, 13);
 
 /* mood gallery */
-const MOODS = [['normal','기본'],['happy','신남'],['eat','먹기'],['play','놀기'],['sleep','쿨쿨'],['tired','피곤'],['hungry','배고픔'],['angry','화남'],['dirty','꼬질꼬질'],['cheer','응원']];
+const MOODS = [['normal','기본'],['happy','신남'],['eat','먹기'],['play','놀기'],['sleep','쿨쿨'],['tired','피곤'],['hungry','배고픔'],['angry','화남']];
 const moodsEl = $('#moods');
 MOODS.forEach(([k,label])=>{
   const fig = document.createElement('figure'); fig.dataset.k = k;
-  const c = document.createElement('canvas'); c.width=72; c.height=72;
+  const c = document.createElement('canvas'); c.width=48; c.height=48;
   fig.appendChild(c); const cap = document.createElement('figcaption'); cap.textContent = label; fig.appendChild(cap);
   moodsEl.appendChild(fig);
 });
 function drawThumbs(){
-  moodsEl.querySelectorAll('figure').forEach(fig=>{ const x=fig.querySelector('canvas').getContext('2d'); x.clearRect(0,0,72,72); x.fillStyle='#e9ebe8'; x.fillRect(0,0,72,72); x.fillStyle='#dfe3d8'; x.fillRect(0,62,72,10); x.drawImage(frame(fig.dataset.k),0,0); });
-  const d=$('#dream').getContext('2d'); d.clearRect(0,0,48,44); d.drawImage(frame('happy'), 6, 4, 60, 55, 0, 0, 48, 44);
+  moodsEl.querySelectorAll('figure').forEach(fig=>{ const x=fig.querySelector('canvas').getContext('2d'); x.clearRect(0,0,48,48); x.fillStyle='#e9ebe8'; x.fillRect(0,0,48,48); x.fillStyle='#dfe3d8'; x.fillRect(0,44,48,4); x.drawImage(frame(fig.dataset.k),0,0); });
+  const d=$('#dream').getContext('2d'); d.clearRect(0,0,48,48); d.drawImage(frame('happy'),0,0);
 }
 
 const avatar = $('#avatar').getContext('2d');
@@ -748,12 +742,12 @@ function renderStats(){
   const m = baseMood(); const chip = $('#mood-chip'); chip.textContent = MOOD_KR[m];
   chip.classList.toggle('bad', ['hungry','tired','dirty','angry'].includes(m));
   $('#lv').textContent = `LV.${st.level}`;
-  moodsEl.querySelectorAll('figure').forEach(f=>f.classList.toggle('cur', f.dataset.k === (tr?'cheer':anim&&anim.type==='feed'?'eat':anim&&anim.type==='play'?'play':m)));
+  moodsEl.querySelectorAll('figure').forEach(f=>f.classList.toggle('cur', f.dataset.k === (tr?'play':anim&&anim.type==='feed'?'eat':anim&&anim.type==='play'?'play':m)));
   const key = m + (st.clean<25);
   if(key !== lastAvatarKey){
     lastAvatarKey = key;
-    avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,48,44);
-    if(sheetReady) avatar.drawImage(frame(m==='sleep'?'happy':m), 6, 4, 60, 55, 0, 0, 48, 44); else lastAvatarKey='';
+    avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,48,48);
+    if(sheetReady){ avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,48,48); avatar.drawImage(frame(m),0,0); } else lastAvatarKey='';
   }
 }
 function renderProfile(){
@@ -782,7 +776,7 @@ $('#name-input').addEventListener('change', e=>{
 $('#screen').addEventListener('pointerdown', e=>{
   if(tr){ e.preventDefault(); swing(); return; }
   const r = cv.getBoundingClientRect(); const x = (e.clientX-r.left)/r.width*W, y = (e.clientY-r.top)/r.height*H;
-  if(Math.abs(x-catX) < 22 && y > GROUND-66 && y < GROUND+3) act('pet');
+  if(Math.abs(x-catX) < 22 && y > GROUND-92 && y < GROUND+3) act('pet');
 });
 $('#swing-btn').addEventListener('pointerdown', e=>{ e.preventDefault(); swing(); });
 $('#swing-btn').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); swing(); } });
@@ -807,6 +801,10 @@ $('#reset').addEventListener('click', e=>{
 });
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ catchUp(); renderAll(); } else save(); });
 addEventListener('pagehide', save);
+
+/* keep the game canvas at a whole-number zoom so pixels stay square */
+function fitCanvas(){ const w=$('#screen').clientWidth; const k=Math.max(1,Math.floor(w/160)); cv.style.width=(160*k)+'px'; }
+addEventListener('resize', fitCanvas); fitCanvas();
 
 /* loop */
 let lastTs = performance.now(), acc = 0, saveAcc = 0;
