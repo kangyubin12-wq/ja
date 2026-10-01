@@ -331,7 +331,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
             <p class="lab">털 색</p><div class="sw" id="sw-fur" role="group" aria-label="털 색"></div>
             <p class="lab">모자 색</p><div class="sw" id="sw-cap" role="group" aria-label="모자 색"></div>
             <p class="lab">모자 줄무늬</p><div class="sw" id="sw-stripe" role="group" aria-label="모자 줄무늬"></div>
-            <p class="lab">유니폼 <small style="font-weight:400;color:var(--muted)">고르면 모자 색도 맞춰져요</small></p><div class="sw" id="sw-uni" role="group" aria-label="유니폼"></div>
+            <p class="lab">유니폼 <small style="font-weight:400;color:var(--muted)">고르면 같은 팀 모자도 같이 써요</small></p><div class="sw" id="sw-uni" role="group" aria-label="유니폼"></div>
             <p class="lab">소품 <small style="font-weight:400;color:var(--muted)">키우면서 하나씩 얻어요</small></p><div class="accs" id="accs"></div>
           </div>
         </div>
@@ -454,19 +454,19 @@ const FURS = {cream:{n:'크림',sw:'#fef1df',p:null}, white:{n:'하양',sw:'#fff
 const CAPS = {blue:{n:'파랑',c:'#254eb0'}, red:{n:'빨강',c:'#c7333d'}, green:{n:'초록',c:'#2f8f58'}, pink:{n:'분홍',c:'#e0648f'},
   orange:{n:'주황',c:'#e07a2a'}, sky:{n:'하늘',c:'#3b95d6'}, purple:{n:'보라',c:'#6b4bb8'}, black:{n:'검정',c:'#3a3a46'}, mint:{n:'민트',c:'#34b8a0'}, navy:{n:'남색',c:'#1f2f66'}, burgundy:{n:'버건디',c:'#7a1f35'}};
 const STRIPES = {none:{n:'없음',c:'#ecebe4'}, white:{n:'하양',c:'#f4f4ee'}, yellow:{n:'노랑',c:'#f2c14e'}, red:{n:'빨강',c:'#d9434e'}, navy:{n:'남색',c:'#1d2d63'}, mint:{n:'민트',c:'#5fd8bd'}, black:{n:'검정',c:'#26262e'}};
-/* uniforms: team-colour inspired kits (colours only — no team names/logos). cap = matching cap colour set on pick */
+/* uniforms: team-colour inspired kits (colours only — no team names/logos). hat = matching team cap (crown / brim / paw mark), worn as cap 'team' */
 const UNIS = {
   none:   {n:'없음'},
-  daejeon:{n:'대전 오렌지',   b:'#f26b1d', t:'#24242b', l:'#24242b', cap:'black'},
-  jamsilp:{n:'잠실 핀스트라이프', b:'#f6f5f1', pin:'#2b2b36', t:'#c8102e', l:'#c8102e', cap:'black'},
-  incheon:{n:'인천 레드',     b:'#cf1430', t:'#f2c14e', l:'#ffffff', cap:'red'},
-  daegu:  {n:'대구 블루',     b:'#1f5bd6', t:'#ffffff', l:'#ffffff', cap:'blue'},
-  changwon:{n:'창원 네이비',  b:'#1d3a6e', t:'#c9a45c', l:'#c9a45c', cap:'navy'},
-  suwon:  {n:'수원 블랙',     b:'#202026', t:'#e0262f', l:'#ffffff', cap:'black'},
-  busan:  {n:'부산 네이비',   b:'#1c2a54', t:'#d22630', l:'#d22630', cap:'navy'},
-  gwangju:{n:'광주 블랙레드', b:'#1c1c22', b2:'#d1112b', t:'#d1112b', l:'#ffffff', cap:'black'},
-  jamsilw:{n:'잠실 화이트',   b:'#f6f5f1', t:'#13294b', l:'#13294b', cap:'navy'},
-  gocheok:{n:'고척 버건디',   b:'#7a1f35', t:'#e8a1b7', l:'#ffffff', cap:'burgundy'}
+  daejeon:{n:'대전 오렌지',   b:'#f26b1d', t:'#24242b', l:'#24242b', hat:{c:'#2e2e38', brim:'#f26b1d', logo:'#f26b1d'}},
+  jamsilp:{n:'잠실 핀스트라이프', b:'#f6f5f1', pin:'#2b2b36', t:'#c8102e', l:'#c8102e', hat:{c:'#2e2e38', brim:'#2e2e38', logo:'#e0303f'}},
+  incheon:{n:'인천 레드',     b:'#cf1430', t:'#f2c14e', l:'#ffffff', hat:{c:'#cf1430', brim:'#cf1430', logo:'#ffffff'}},
+  daegu:  {n:'대구 블루',     b:'#1f5bd6', t:'#ffffff', l:'#ffffff', hat:{c:'#1f5bd6', brim:'#1f5bd6', logo:'#ffffff'}},
+  changwon:{n:'창원 네이비',  b:'#1d3a6e', t:'#c9a45c', l:'#c9a45c', hat:{c:'#1d3a6e', brim:'#1d3a6e', logo:'#d8b46a'}},
+  suwon:  {n:'수원 블랙',     b:'#202026', t:'#e0262f', l:'#ffffff', hat:{c:'#2e2e38', brim:'#2e2e38', logo:'#e0262f'}},
+  busan:  {n:'부산 네이비',   b:'#1c2a54', t:'#d22630', l:'#d22630', hat:{c:'#1c2a54', brim:'#1c2a54', logo:'#e0303f'}},
+  gwangju:{n:'광주 블랙레드', b:'#1c1c22', b2:'#d1112b', t:'#d1112b', l:'#ffffff', hat:{c:'#2e2e38', brim:'#d1112b', logo:'#ffffff'}},
+  jamsilw:{n:'잠실 화이트',   b:'#f6f5f1', t:'#13294b', l:'#13294b', hat:{c:'#13294b', brim:'#13294b', logo:'#ffffff'}},
+  gocheok:{n:'고척 버건디',   b:'#7a1f35', t:'#e8a1b7', l:'#ffffff', hat:{c:'#7a1f35', brim:'#7a1f35', logo:'#f4b8ca'}}
 };
 /* which fur pixels of each frame are "body" (jersey area): flood from the chest, below the chin, paws kept */
 const JMASK = {};
@@ -504,6 +504,36 @@ function paintJersey(d, f, U){
     d[k*4] = Math.min(255,c[0]*sh); d[k*4+1] = Math.min(255,c[1]*sh); d[k*4+2] = Math.min(255,c[2]*sh);
   });
 }
+const CAPMASK = {};
+function capMask(f){
+  if(CAPMASK[f]) return CAPMASK[f];
+  const A = ANCHOR[f], d = frameCache[f].getContext('2d').getImageData(0,0,48,48).data;
+  const P = (x,y)=>{ const i=(y*48+x)*4; return [d[i],d[i+1],d[i+2],d[i+3]]; };
+  const isCap = (x,y)=>{ if(x<0||x>47||y<0||y>47) return false; const [r,g,b,a]=P(x,y); return a && b-r>60 && b>100; };
+  const isDark = (x,y)=>{ const [r,g,b,a]=P(x,y); return a && (r+g+b)/3<90 && !isCap(x,y); };
+  const lim = Math.round(A.y);  // only the hat (the eat bowl sits lower)
+  let top = 48; for(let y=0;y<lim;y++) for(let x=0;x<48;x++) if(isCap(x,y)) top = Math.min(top,y);
+  // brim separator: a long dark run with cap pixels just below it
+  let sep = -1;
+  for(let y=top; y<lim; y++){
+    let run=0, best=0; for(let x=0;x<48;x++){ if(isDark(x,y)){ run++; continue; } if(run && isCap(x,y) && isCap(x-run-1,y)) best = Math.max(best,run); run = 0; }
+    let below=0; for(let yy=y+1; yy<=Math.min(lim-1,y+3); yy++) for(let x=0;x<48;x++) if(isCap(x,yy)) below++;
+    if(best>=5 && below>=5){ sep = y; break; }
+  }
+  const brim = new Set(), logo = new Set();
+  for(let y=top; y<lim; y++) for(let x=0;x<48;x++){
+    if(isCap(x,y) && sep>=0 && y>sep) brim.add(y*48+x);
+    const [r,g,b,a] = P(x,y);
+    if(a && (r+g+b)/3>230 && (sep<0 || y<sep)){
+      let L=false, R=false; for(let k=1;k<=3;k++){ if(isCap(x-k,y)) L=true; if(isCap(x+k,y)) R=true; }
+      if(L && R) logo.add(y*48+x);
+    }
+  }
+  return (CAPMASK[f] = {brim, logo, lim});
+}
+function teamHat(L){ return L.cap==='team' && UNIS[L.uni] && UNIS[L.uni].hat ? UNIS[L.uni].hat : null; }
+function capName(cap, uni){ return cap==='team' ? (UNIS[uni] && UNIS[uni].hat ? UNIS[uni].n+' 모자' : CAPS.blue.n) : (CAPS[cap]||CAPS.blue).n; }
+function capTable(uni){ const h = UNIS[uni] && UNIS[uni].hat; return h ? {team:{n:'유니폼 모자', c:h.c, brim:h.brim, logo:h.logo}, ...CAPS} : CAPS; }
 const ACCS = [
   {k:'collar', n:'방울 목걸이', how:'LV.2', ok:()=>st.level>=2},
   {k:'ribbon', n:'리본', how:'LV.3', ok:()=>st.level>=3},
@@ -528,18 +558,19 @@ function frame(k, o){
   const c = document.createElement('canvas'); c.width=48; c.height=48; const x = c.getContext('2d');
   x.drawImage(frameCache[f],0,0);
   const img = x.getImageData(0,0,48,48), d = img.data;
-  const fp = FURS[L.fur] && FURS[L.fur].p ? FURS[L.fur].p.map(hex) : null, cc = hex((CAPS[L.cap]||CAPS.blue).c), sc = L.stripe && L.stripe!=='none' && STRIPES[L.stripe] ? hex(STRIPES[L.stripe].c) : null;
+  const fp = FURS[L.fur] && FURS[L.fur].p ? FURS[L.fur].p.map(hex) : null, TH = teamHat(L), CM = TH && ANCHOR[f] ? capMask(f) : null, cc = hex(TH ? TH.c : (CAPS[L.cap]||CAPS.blue).c), bc = TH ? hex(TH.brim||TH.c) : cc, sc = L.stripe && L.stripe!=='none' && STRIPES[L.stripe] ? hex(STRIPES[L.stripe].c) : null;
   for(let i=0;i<d.length;i+=4){
     if(!d[i+3]) continue; const r=d[i], g=d[i+1], b=d[i+2];
     if(b-r>60 && b>100 && (L.cap!=='blue' || sc)){
       const t=((r+g+b)/3)/97, px=(i/4)%48;
-      const base = sc && px%4===1 ? sc : cc, k = sc && px%4===1 ? Math.max(.7, Math.min(1.15, t)) : t;
+      const onBrim = CM && CM.brim.has(i/4), base = onBrim ? bc : sc && px%4===1 ? sc : cc, k = !onBrim && sc && px%4===1 ? Math.max(.7, Math.min(1.15, t)) : t;
       d[i]=Math.min(255,base[0]*k); d[i+1]=Math.min(255,base[1]*k); d[i+2]=Math.min(255,base[2]*k); continue;
     }
     if(fp && r>=205 && g>=185 && b>=165 && (r-g)<40 && !(r===255&&g===255&&b===255)){
       const lum=(r+g+b)/3, t = lum>=238 ? fp[0] : lum>=225 ? fp[1] : fp[2]; d[i]=t[0]; d[i+1]=t[1]; d[i+2]=t[2];
     }
   }
+  if(CM && TH.logo){ const lc = hex(TH.logo); CM.logo.forEach(k=>{ d[k*4]=lc[0]; d[k*4+1]=lc[1]; d[k*4+2]=lc[2]; }); }
   if(L.uni && L.uni!=='none' && UNIS[L.uni] && ANCHOR[f]) paintJersey(d, f, UNIS[L.uni]);
   x.putImageData(img,0,0);
   drawAccessories(x, f, accKey.split(','));
@@ -663,6 +694,7 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(raw) return Object
 let frozen = false;
 function save(){ if(frozen) return; try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
 let st = load();
+if(st.uni && st.uni!=='none' && !st.hat2){ st.cap = 'team'; } st.hat2 = 1;  /* 1.2.1: uniforms now come with their team cap */
 function addLog(text){ st.log.unshift({t:Date.now(), text}); st.log = st.log.slice(0,8); if(uiReady) renderLog(); }
 const needXp = lv => 20 + (lv-1)*15;
 const grade = lv => lv>=12?'MVP':lv>=9?'올스타':lv>=6?'주전 선수':lv>=4?'1군 벤치':lv>=2?'2군 선수':'연습생';
@@ -1157,7 +1189,8 @@ function swatches(el, table, cur, onPick, kind){
   el.innerHTML = '';
   Object.entries(table).forEach(([k,v])=>{
     const b = document.createElement('button'); b.type='button'; b.dataset.k=k; b.setAttribute('aria-pressed', String(k===cur));
-    if(kind==='uni'){ b.innerHTML = `<i style="border-radius:6px;background:${uniSwatch(v)}"></i><span>${v.n}</span>`; }
+    if(kind==='cap' && k==='team'){ b.innerHTML = `<i style="background:linear-gradient(${v.c} 0 62%, ${v.brim} 62%)"></i><span>${v.n}</span>`; }
+    else if(kind==='uni'){ b.innerHTML = `<i style="border-radius:6px;background:${uniSwatch(v)}"></i><span>${v.n}</span>`; }
     else b.innerHTML = kind==='stripe' ? `<i style="background:${k==='none' ? 'repeating-linear-gradient(135deg,#fff 0 5px,#ccc 5px 6px)' : `repeating-linear-gradient(90deg,#3653a3 0 4px,${v.c} 4px 7px)`}"></i><span>${v.n}</span>` : `<i style="background:${kind==='fur'?v.sw:v.c}"></i><span>${v.n}</span>`;
     b.addEventListener('click', ()=>{ el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x===b))); onPick(k); });
     el.appendChild(b);
@@ -1175,9 +1208,10 @@ function refreshLooks(){ lastAvatarKey=''; drawThumbs(); renderAll(); paintPrevi
 function renderCloset(){
   if(!sheetReady) return;
   swatches($('#sw-fur'), FURS, st.fur, k=>{ st.fur=k; refreshLooks(); }, 'fur');
-  swatches($('#sw-cap'), CAPS, st.cap, k=>{ st.cap=k; refreshLooks(); }, 'cap');
+  if(st.cap==='team' && !(UNIS[st.uni] && UNIS[st.uni].hat)) st.cap = 'blue';
+  swatches($('#sw-cap'), capTable(st.uni||'none'), st.cap, k=>{ st.cap=k; refreshLooks(); }, 'cap');
   swatches($('#sw-stripe'), STRIPES, st.stripe||'none', k=>{ st.stripe=k; refreshLooks(); }, 'stripe');
-  swatches($('#sw-uni'), UNIS, st.uni||'none', k=>{ st.uni=k; if(UNIS[k].cap) st.cap=UNIS[k].cap; renderCloset(); refreshLooks(); if(k!=='none') addLog(`새 유니폼: ${UNIS[k].n}`); }, 'uni');
+  swatches($('#sw-uni'), UNIS, st.uni||'none', k=>{ st.uni=k; st.cap = UNIS[k].hat ? 'team' : (st.cap==='team' ? 'blue' : st.cap); renderCloset(); refreshLooks(); if(k!=='none') addLog(`새 유니폼: ${UNIS[k].n}`); }, 'uni');
   const box = $('#accs'); box.innerHTML='';
   ACCS.forEach(a=>{
     const b=document.createElement('button'); b.type='button'; const ok=a.ok();
@@ -1198,15 +1232,16 @@ function initLooks(){
   const ni = $('#intro-name'); ni.value = st.name;
   const paint = ()=>paintPreview('#intro-cv', draft);
   swatches($('#in-fur'), FURS, draft.fur, k=>{ draft.fur=k; paint(); }, 'fur');
-  swatches($('#in-cap'), CAPS, draft.cap, k=>{ draft.cap=k; paint(); }, 'cap');
+  const paintCap = ()=> swatches($('#in-cap'), capTable(draft.uni), draft.cap, k=>{ draft.cap=k; paint(); }, 'cap');
+  paintCap();
   swatches($('#in-stripe'), STRIPES, draft.stripe, k=>{ draft.stripe=k; paint(); }, 'stripe');
-  const paintUni = ()=> swatches($('#in-uni'), UNIS, draft.uni, k=>{ draft.uni=k; if(UNIS[k].cap){ draft.cap=UNIS[k].cap; swatches($('#in-cap'), CAPS, draft.cap, c=>{ draft.cap=c; paint(); }, 'cap'); } paint(); }, 'uni');
+  const paintUni = ()=> swatches($('#in-uni'), UNIS, draft.uni, k=>{ draft.uni=k; draft.cap = UNIS[k].hat ? 'team' : (draft.cap==='team' ? 'blue' : draft.cap); paintCap(); paint(); }, 'uni');
   paintUni();
   paint(); setTimeout(()=>ni.focus(), 50);
   $('#intro-go').onclick = ()=>{
     const nm = ni.value.trim(); if(nm) st.name = nm;
     st.fur = draft.fur; st.cap = draft.cap; st.stripe = draft.stripe; st.uni = draft.uni; st.setup = true;
-    addLog(`입단식! ${st.name}, ${FURS[st.fur].n} 털에 ${CAPS[st.cap].n} 모자로 합류`);
+    addLog(`입단식! ${st.name}, ${FURS[st.fur].n} 털에 ${capName(st.cap, st.uni)}${st.cap==='team'?'':' 모자'}로 합류`);
     intro.hidden = true; refreshLooks(); renderProfile(); say(`안녕! 나는 ${st.name}. 잘 부탁한다냥!`);
   };
 }

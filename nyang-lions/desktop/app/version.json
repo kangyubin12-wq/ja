@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "note": "구단 컬러 유니폼 10종 추가",
+  "version": "1.2.1",
+  "note": "유니폼별 팀 모자(챙·발바닥 마크 색) 추가",
   "files": [
     "index.html",
     "cat-sprites.png",
