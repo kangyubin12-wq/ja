@@ -1,6 +1,6 @@
 {
-  "version": "1.1.2",
-  "note": "폰 앱(홈 화면 설치) 지원",
+  "version": "1.2.0",
+  "note": "구단 컬러 유니폼 10종 추가",
   "files": [
     "index.html",
     "cat-sprites.png",

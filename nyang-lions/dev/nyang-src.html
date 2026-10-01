@@ -331,6 +331,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
             <p class="lab">털 색</p><div class="sw" id="sw-fur" role="group" aria-label="털 색"></div>
             <p class="lab">모자 색</p><div class="sw" id="sw-cap" role="group" aria-label="모자 색"></div>
             <p class="lab">모자 줄무늬</p><div class="sw" id="sw-stripe" role="group" aria-label="모자 줄무늬"></div>
+            <p class="lab">유니폼 <small style="font-weight:400;color:var(--muted)">고르면 모자 색도 맞춰져요</small></p><div class="sw" id="sw-uni" role="group" aria-label="유니폼"></div>
             <p class="lab">소품 <small style="font-weight:400;color:var(--muted)">키우면서 하나씩 얻어요</small></p><div class="accs" id="accs"></div>
           </div>
         </div>
@@ -374,6 +375,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
     <p class="lab">털 색</p><div class="sw" id="in-fur" role="group" aria-label="털 색"></div>
     <p class="lab">모자 색</p><div class="sw" id="in-cap" role="group" aria-label="모자 색"></div>
     <p class="lab">모자 줄무늬</p><div class="sw" id="in-stripe" role="group" aria-label="모자 줄무늬"></div>
+    <p class="lab">유니폼</p><div class="sw" id="in-uni" role="group" aria-label="유니폼"></div>
     <button type="button" class="go" id="intro-go">입단하기!</button>
   </div>
 </div>
@@ -452,6 +454,56 @@ const FURS = {cream:{n:'크림',sw:'#fef1df',p:null}, white:{n:'하양',sw:'#fff
 const CAPS = {blue:{n:'파랑',c:'#254eb0'}, red:{n:'빨강',c:'#c7333d'}, green:{n:'초록',c:'#2f8f58'}, pink:{n:'분홍',c:'#e0648f'},
   orange:{n:'주황',c:'#e07a2a'}, sky:{n:'하늘',c:'#3b95d6'}, purple:{n:'보라',c:'#6b4bb8'}, black:{n:'검정',c:'#3a3a46'}, mint:{n:'민트',c:'#34b8a0'}, navy:{n:'남색',c:'#1f2f66'}, burgundy:{n:'버건디',c:'#7a1f35'}};
 const STRIPES = {none:{n:'없음',c:'#ecebe4'}, white:{n:'하양',c:'#f4f4ee'}, yellow:{n:'노랑',c:'#f2c14e'}, red:{n:'빨강',c:'#d9434e'}, navy:{n:'남색',c:'#1d2d63'}, mint:{n:'민트',c:'#5fd8bd'}, black:{n:'검정',c:'#26262e'}};
+/* uniforms: team-colour inspired kits (colours only — no team names/logos). cap = matching cap colour set on pick */
+const UNIS = {
+  none:   {n:'없음'},
+  daejeon:{n:'대전 오렌지',   b:'#f26b1d', t:'#24242b', l:'#24242b', cap:'black'},
+  jamsilp:{n:'잠실 핀스트라이프', b:'#f6f5f1', pin:'#2b2b36', t:'#c8102e', l:'#c8102e', cap:'black'},
+  incheon:{n:'인천 레드',     b:'#cf1430', t:'#f2c14e', l:'#ffffff', cap:'red'},
+  daegu:  {n:'대구 블루',     b:'#1f5bd6', t:'#ffffff', l:'#ffffff', cap:'blue'},
+  changwon:{n:'창원 네이비',  b:'#1d3a6e', t:'#c9a45c', l:'#c9a45c', cap:'navy'},
+  suwon:  {n:'수원 블랙',     b:'#202026', t:'#e0262f', l:'#ffffff', cap:'black'},
+  busan:  {n:'부산 네이비',   b:'#1c2a54', t:'#d22630', l:'#d22630', cap:'navy'},
+  gwangju:{n:'광주 블랙레드', b:'#1c1c22', b2:'#d1112b', t:'#d1112b', l:'#ffffff', cap:'black'},
+  jamsilw:{n:'잠실 화이트',   b:'#f6f5f1', t:'#13294b', l:'#13294b', cap:'navy'},
+  gocheok:{n:'고척 버건디',   b:'#7a1f35', t:'#e8a1b7', l:'#ffffff', cap:'burgundy'}
+};
+/* which fur pixels of each frame are "body" (jersey area): flood from the chest, below the chin, paws kept */
+const JMASK = {};
+const JZONE = { sleep:{x0:30,x1:45,y0:30,y1:44,seed:[[40,38],[38,41]]}, eat:{zoneOnly:1} };
+function furTier(r,g,b,a){ if(!a) return -1; if(r>=205 && g>=185 && b>=165 && (r-g)<40){ const l=(r+g+b)/3; return l>=238?0:l>=225?1:2; } return -1; }
+function jerseyMask(f){
+  if(JMASK[f]) return JMASK[f];
+  const A = ANCHOR[f], d = frameCache[f].getContext('2d').getImageData(0,0,48,48).data;
+  const tier = (x,y)=> furTier(d[(y*48+x)*4],d[(y*48+x)*4+1],d[(y*48+x)*4+2],d[(y*48+x)*4+3]);
+  let maxY = 0; for(let y=0;y<48;y++) for(let x=0;x<48;x++) if(tier(x,y)>=0) maxY = y;
+  const Z = JZONE[f] || {};
+  const y0 = Z.y0 ?? Math.round(A.y + 5), y1 = Z.y1 ?? (maxY - 1);
+  const x0 = Z.x0 ?? Math.floor(A.L - 7), x1 = Z.x1 ?? Math.ceil(A.R + 5);
+  const inZ = (x,y)=> x>=x0 && x<=x1 && y>=y0 && y<=y1 && tier(x,y)>=0;
+  const m = new Map();
+  if(Z.zoneOnly){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inZ(x,y)) m.set(y*48+x, tier(x,y)); }
+  else {
+    const seeds = Z.seed || [];
+    if(!Z.seed){ const sy = Math.min(y1, y0 + 2); for(let x=Math.floor(A.L); x<=Math.ceil(A.R); x++) seeds.push([x, sy]); }
+    const q = seeds.filter(([x,y])=>inZ(x,y));
+    while(q.length){ const [x,y] = q.pop(), k = y*48+x; if(m.has(k) || !inZ(x,y)) continue; m.set(k, tier(x,y)); q.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]); }
+  }
+  return (JMASK[f] = {m, y0, cx: Math.round((A.L+A.R)/2)});
+}
+function paintJersey(d, f, U){
+  const J = jerseyMask(f), B = hex(U.b), B2 = U.b2 ? hex(U.b2) : null, P = U.pin ? hex(U.pin) : null, T = hex(U.t), L = hex(U.l);
+  const top = Math.min(...[...J.m.keys()].map(k=>Math.floor(k/48)).concat([99]));
+  J.m.forEach((t, k)=>{
+    const x = k%48, y = Math.floor(k/48);
+    let c = (B2 && (x - J.cx) + (y - top) * 0.9 > 1) ? B2 : B;
+    if(P && x%3===0) c = P;
+    if(y===top) c = T;                                            // collar trim
+    if(y===top+2 && Math.abs(x-J.cx)<=3 && (x+J.cx)%2===0) c = L; // chest lettering
+    const sh = t===0 ? 1 : t===1 ? .9 : .74;
+    d[k*4] = Math.min(255,c[0]*sh); d[k*4+1] = Math.min(255,c[1]*sh); d[k*4+2] = Math.min(255,c[2]*sh);
+  });
+}
 const ACCS = [
   {k:'collar', n:'방울 목걸이', how:'LV.2', ok:()=>st.level>=2},
   {k:'ribbon', n:'리본', how:'LV.3', ok:()=>st.level>=3},
@@ -467,11 +519,11 @@ const ANCHOR = {
 };
 const hex = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const styled = new Map();
-function looks(o){ return {fur:(o&&o.fur)||st.fur, cap:(o&&o.cap)||st.cap, stripe:(o&&o.stripe)||st.stripe||'none', acc:(o&&o.acc)||st.acc}; }
+function looks(o){ return {fur:(o&&o.fur)||st.fur, cap:(o&&o.cap)||st.cap, stripe:(o&&o.stripe)||st.stripe||'none', uni:(o&&o.uni)||st.uni||'none', acc:(o&&o.acc)||st.acc}; }
 function frame(k, o){
   const f = FACE2FRAME[k]||k; if(!frameCache[f]) return frameCache.normal;
   const L = looks(o); const accKey = ACCS.filter(a=>L.acc[a.k] && a.ok()).map(a=>a.k).join(',');
-  const key = `${f}|${L.fur}|${L.cap}|${L.stripe}|${accKey}`;
+  const key = `${f}|${L.fur}|${L.cap}|${L.stripe}|${L.uni}|${accKey}`;
   if(styled.has(key)) return styled.get(key);
   const c = document.createElement('canvas'); c.width=48; c.height=48; const x = c.getContext('2d');
   x.drawImage(frameCache[f],0,0);
@@ -488,6 +540,7 @@ function frame(k, o){
       const lum=(r+g+b)/3, t = lum>=238 ? fp[0] : lum>=225 ? fp[1] : fp[2]; d[i]=t[0]; d[i+1]=t[1]; d[i+2]=t[2];
     }
   }
+  if(L.uni && L.uni!=='none' && UNIS[L.uni] && ANCHOR[f]) paintJersey(d, f, UNIS[L.uni]);
   x.putImageData(img,0,0);
   drawAccessories(x, f, accKey.split(','));
   styled.set(key,c); return c;
@@ -604,7 +657,7 @@ const KEY = 'nyang-lions-v1';
 function fresh(){
   const t = Date.now();
   return {name:'라온', born:t, last:t, hunger:72, happy:68, energy:82, clean:84, xp:0, level:1,
-    sleeping:false, best:0, trainings:0, homers:0, fur:'cream', cap:'blue', stripe:'none', acc:{}, setup:false, log:[{t, text:'첫 만남! 꾹꾹이즈 입단'}]};
+    sleeping:false, best:0, trainings:0, homers:0, fur:'cream', cap:'blue', stripe:'none', uni:'none', acc:{}, setup:false, log:[{t, text:'첫 만남! 꾹꾹이즈 입단'}]};
 }
 function load(){ try{ const raw=localStorage.getItem(KEY); if(raw) return Object.assign(fresh(), JSON.parse(raw)); }catch(e){} return fresh(); }
 let frozen = false;
@@ -1104,10 +1157,18 @@ function swatches(el, table, cur, onPick, kind){
   el.innerHTML = '';
   Object.entries(table).forEach(([k,v])=>{
     const b = document.createElement('button'); b.type='button'; b.dataset.k=k; b.setAttribute('aria-pressed', String(k===cur));
-    b.innerHTML = kind==='stripe' ? `<i style="background:${k==='none' ? 'repeating-linear-gradient(135deg,#fff 0 5px,#ccc 5px 6px)' : `repeating-linear-gradient(90deg,#3653a3 0 4px,${v.c} 4px 7px)`}"></i><span>${v.n}</span>` : `<i style="background:${kind==='fur'?v.sw:v.c}"></i><span>${v.n}</span>`;
+    if(kind==='uni'){ b.innerHTML = `<i style="border-radius:6px;background:${uniSwatch(v)}"></i><span>${v.n}</span>`; }
+    else b.innerHTML = kind==='stripe' ? `<i style="background:${k==='none' ? 'repeating-linear-gradient(135deg,#fff 0 5px,#ccc 5px 6px)' : `repeating-linear-gradient(90deg,#3653a3 0 4px,${v.c} 4px 7px)`}"></i><span>${v.n}</span>` : `<i style="background:${kind==='fur'?v.sw:v.c}"></i><span>${v.n}</span>`;
     b.addEventListener('click', ()=>{ el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', String(x===b))); onPick(k); });
     el.appendChild(b);
   });
+}
+function uniSwatch(v){
+  if(!v.b) return 'repeating-linear-gradient(135deg,#fff 0 5px,#ccc 5px 6px)';
+  const trim = `linear-gradient(${v.t},${v.t}) top/100% 4px no-repeat`;
+  if(v.pin) return `${trim}, repeating-linear-gradient(90deg,${v.b} 0 3px,${v.pin} 3px 4px)`;
+  if(v.b2) return `${trim}, linear-gradient(135deg,${v.b} 0 55%,${v.b2} 55%)`;
+  return `${trim}, linear-gradient(${v.b},${v.b})`;
 }
 function paintPreview(id, o, k='happy'){ const x=$(id).getContext('2d'); x.clearRect(0,0,48,48); x.fillStyle='#e9ebe8'; x.fillRect(0,0,48,48); x.fillStyle='#dfe3d8'; x.fillRect(0,44,48,4); if(sheetReady) x.drawImage(frame(k,o),0,0); }
 function refreshLooks(){ lastAvatarKey=''; drawThumbs(); renderAll(); paintPreview('#closet-cv'); save(); }
@@ -1116,6 +1177,7 @@ function renderCloset(){
   swatches($('#sw-fur'), FURS, st.fur, k=>{ st.fur=k; refreshLooks(); }, 'fur');
   swatches($('#sw-cap'), CAPS, st.cap, k=>{ st.cap=k; refreshLooks(); }, 'cap');
   swatches($('#sw-stripe'), STRIPES, st.stripe||'none', k=>{ st.stripe=k; refreshLooks(); }, 'stripe');
+  swatches($('#sw-uni'), UNIS, st.uni||'none', k=>{ st.uni=k; if(UNIS[k].cap) st.cap=UNIS[k].cap; renderCloset(); refreshLooks(); if(k!=='none') addLog(`새 유니폼: ${UNIS[k].n}`); }, 'uni');
   const box = $('#accs'); box.innerHTML='';
   ACCS.forEach(a=>{
     const b=document.createElement('button'); b.type='button'; const ok=a.ok();
@@ -1131,17 +1193,19 @@ let draft = null;
 function initLooks(){
   renderCloset();
   if(st.setup) return;
-  draft = {fur: st.fur, cap: st.cap, stripe: st.stripe||'none', acc:{}};
+  draft = {fur: st.fur, cap: st.cap, stripe: st.stripe||'none', uni: st.uni||'none', acc:{}};
   const intro = $('#intro'); intro.hidden = false;
   const ni = $('#intro-name'); ni.value = st.name;
   const paint = ()=>paintPreview('#intro-cv', draft);
   swatches($('#in-fur'), FURS, draft.fur, k=>{ draft.fur=k; paint(); }, 'fur');
   swatches($('#in-cap'), CAPS, draft.cap, k=>{ draft.cap=k; paint(); }, 'cap');
   swatches($('#in-stripe'), STRIPES, draft.stripe, k=>{ draft.stripe=k; paint(); }, 'stripe');
+  const paintUni = ()=> swatches($('#in-uni'), UNIS, draft.uni, k=>{ draft.uni=k; if(UNIS[k].cap){ draft.cap=UNIS[k].cap; swatches($('#in-cap'), CAPS, draft.cap, c=>{ draft.cap=c; paint(); }, 'cap'); } paint(); }, 'uni');
+  paintUni();
   paint(); setTimeout(()=>ni.focus(), 50);
   $('#intro-go').onclick = ()=>{
     const nm = ni.value.trim(); if(nm) st.name = nm;
-    st.fur = draft.fur; st.cap = draft.cap; st.stripe = draft.stripe; st.setup = true;
+    st.fur = draft.fur; st.cap = draft.cap; st.stripe = draft.stripe; st.uni = draft.uni; st.setup = true;
     addLog(`입단식! ${st.name}, ${FURS[st.fur].n} 털에 ${CAPS[st.cap].n} 모자로 합류`);
     intro.hidden = true; refreshLooks(); renderProfile(); say(`안녕! 나는 ${st.name}. 잘 부탁한다냥!`);
   };
