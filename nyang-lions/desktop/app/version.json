@@ -1,6 +1,6 @@
 {
-  "version": "1.2.1",
-  "note": "유니폼별 팀 모자(챙·발바닥 마크 색) 추가",
+  "version": "1.3.0",
+  "note": "고해상도(2배) 스프라이트 + 디테일 유니폼·팀 모자",
   "files": [
     "index.html",
     "cat-sprites.png",

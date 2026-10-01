@@ -265,7 +265,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
             <div class="view-status" id="v-status" hidden>
               <div class="menu-head"><span id="stat-ic"></span>상태 보기</div>
               <div class="sv">
-                <canvas id="sv-cat" width="48" height="48"></canvas>
+                <canvas id="sv-cat" width="96" height="96"></canvas>
                 <dl><dt>이름</dt><dd>:</dd><dd id="sv-name">라온</dd><dt>종류</dt><dd>:</dd><dd>고양이</dd><dt>팀</dt><dd>:</dd><dd>꾹꾹이즈</dd><dt>입단</dt><dd>:</dd><dd id="sv-born">-</dd></dl>
                 <div class="lvrow"><span id="sv-lv">LV.1</span><div class="lvbar"><i id="sv-bar"></i></div></div>
                 <p class="say" id="sv-say">"언젠가 홈구장에 가고 싶어!"</p>
@@ -296,7 +296,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
       <div class="card">
         <h2><span class="l">상태 보기</span><small id="grade">연습생</small></h2>
         <div class="profile">
-          <canvas class="avatar" id="avatar" width="48" height="48" aria-hidden="true"></canvas>
+          <canvas class="avatar" id="avatar" width="96" height="96" aria-hidden="true"></canvas>
           <dl class="facts">
             <dt>이름</dt><dd><input class="name-input" id="name-input" maxlength="8" aria-label="고양이 이름"></dd>
             <dt>종류</dt><dd>고양이</dd>
@@ -314,7 +314,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
       <div class="card">
         <h2><span class="l">상태</span><small id="cond">컨디션 --</small></h2>
         <div class="stats" id="stats"></div>
-        <div class="dream"><canvas id="dream" width="48" height="48" aria-hidden="true"></canvas><span id="dream-text">지금 이 고양이는 주전 선수의 꿈을 향해 달려가는 중!</span></div>
+        <div class="dream"><canvas id="dream" width="96" height="96" aria-hidden="true"></canvas><span id="dream-text">지금 이 고양이는 주전 선수의 꿈을 향해 달려가는 중!</span></div>
       </div>
 
       <div class="card">
@@ -326,7 +326,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
       <div class="card" id="closet">
         <h2>꾸미기 <small>옷장</small></h2>
         <div class="closet">
-          <canvas id="closet-cv" width="48" height="48" aria-hidden="true"></canvas>
+          <canvas id="closet-cv" width="96" height="96" aria-hidden="true"></canvas>
           <div class="opts">
             <p class="lab">털 색</p><div class="sw" id="sw-fur" role="group" aria-label="털 색"></div>
             <p class="lab">모자 색</p><div class="sw" id="sw-cap" role="group" aria-label="모자 색"></div>
@@ -370,7 +370,7 @@ html.mob:not(.mob-egg),html.mob:not(.mob-egg) body{height:auto;overflow:auto;-we
     <p class="eyebrow">WELCOME TO KNEADERS</p>
     <h2 id="intro-t">입단식</h2>
     <p>함께할 막내 고양이를 꾸며 주세요. 털 색과 모자 색은 나중에 옷장에서 바꿀 수 있어요.</p>
-    <canvas id="intro-cv" width="48" height="48" aria-hidden="true"></canvas>
+    <canvas id="intro-cv" width="96" height="96" aria-hidden="true"></canvas>
     <label for="intro-name">이름 <input class="name-input" id="intro-name" maxlength="8"></label>
     <p class="lab">털 색</p><div class="sw" id="in-fur" role="group" aria-label="털 색"></div>
     <p class="lab">모자 색</p><div class="sw" id="in-cap" role="group" aria-label="모자 색"></div>
@@ -443,9 +443,30 @@ function toCanvas(G){
 const FRAMES=['normal','happy','eat','play','sleep','tired','hungry','angry'];
 const FACE2FRAME={normal:'normal',blink:'normal',happy:'happy',closed:'happy',eat:'eat',play:'play',sleep:'sleep',tired:'tired',hungry:'hungry',angry:'angry',dirty:'normal',cheer:'normal',excited:'happy',gift:'happy'};
 const frameCache={}; let sheetReady=false;
+/* sprites are rendered at 2x (96px) so uniforms and caps can carry finer detail; the 48px art is upscaled with Scale2x/EPX */
+const RES = 2, FS = 48*RES;
+function epx2(src, ctx){
+  const w=src.width, h=src.height, s=src.data, out=ctx.createImageData(w*2,h*2), o=out.data;
+  const K=(x,y)=>{ x=Math.max(0,Math.min(w-1,x)); y=Math.max(0,Math.min(h-1,y)); const i=(y*w+x)*4; return s[i]+','+s[i+1]+','+s[i+2]+','+s[i+3]; };
+  const cp=(dx,dy,sx,sy)=>{ sx=Math.max(0,Math.min(w-1,sx)); sy=Math.max(0,Math.min(h-1,sy)); const i=(sy*w+sx)*4, j=(dy*w*2+dx)*4; o[j]=s[i]; o[j+1]=s[i+1]; o[j+2]=s[i+2]; o[j+3]=s[i+3]; };
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const A=K(x,y-1), B=K(x+1,y), C=K(x-1,y), D=K(x,y+1);
+    cp(2*x,2*y, ...(C===A && C!==D && A!==B ? [x-1,y] : [x,y]));
+    cp(2*x+1,2*y, ...(A===B && A!==C && B!==D ? [x+1,y] : [x,y]));
+    cp(2*x,2*y+1, ...(D===C && D!==B && C!==A ? [x-1,y] : [x,y]));
+    cp(2*x+1,2*y+1, ...(B===D && B!==A && D!==C ? [x+1,y] : [x,y]));
+  }
+  return out;
+}
 const SHEET=new Image();
 SHEET.onload=()=>{
-  FRAMES.forEach((k,i)=>{ const c=document.createElement('canvas'); c.width=48; c.height=48; c.getContext('2d').drawImage(SHEET,i*48,0,48,48,0,0,48,48); frameCache[k]=c; });
+  const cell = SHEET.height >= 96 ? 96 : 48;
+  FRAMES.forEach((k,i)=>{
+    const c=document.createElement('canvas'); c.width=FS; c.height=FS; const x=c.getContext('2d');
+    if(cell===FS){ x.drawImage(SHEET,i*cell,0,cell,cell,0,0,FS,FS); frameCache[k]=c; return; }
+    const t=document.createElement('canvas'); t.width=48; t.height=48; const tx=t.getContext('2d'); tx.drawImage(SHEET,i*48,0,48,48,0,0,48,48);
+    x.putImageData(epx2(tx.getImageData(0,0,48,48), x), 0, 0); frameCache[k]=c;
+  });
   sheetReady=true; initLooks(); drawThumbs(); lastAvatarKey=''; renderAll();
 };
 SHEET.src='@SPRITES@';
@@ -468,38 +489,61 @@ const UNIS = {
   jamsilw:{n:'잠실 화이트',   b:'#f6f5f1', t:'#13294b', l:'#13294b', hat:{c:'#13294b', brim:'#13294b', logo:'#ffffff'}},
   gocheok:{n:'고척 버건디',   b:'#7a1f35', t:'#e8a1b7', l:'#ffffff', hat:{c:'#7a1f35', brim:'#7a1f35', logo:'#f4b8ca'}}
 };
-/* which fur pixels of each frame are "body" (jersey area): flood from the chest, below the chin, paws kept */
+/* which fur pixels of each frame are "body" (jersey area): flood from the chest, below the chin, bottom paw row kept.
+   All coordinates here are in 96px sprite space (ANCHOR is in 48px space, so it is scaled by RES). */
 const JMASK = {};
-const JZONE = { sleep:{x0:30,x1:45,y0:30,y1:44,seed:[[40,38],[38,41]]}, eat:{zoneOnly:1} };
+const JZONE = { sleep:{x0:30,x1:45,y0:30,y1:44,seed:[[40,38],[38,41]]}, eat:{zoneOnly:1} };   // 48px space
 function furTier(r,g,b,a){ if(!a) return -1; if(r>=205 && g>=185 && b>=165 && (r-g)<40){ const l=(r+g+b)/3; return l>=238?0:l>=225?1:2; } return -1; }
 function jerseyMask(f){
   if(JMASK[f]) return JMASK[f];
-  const A = ANCHOR[f], d = frameCache[f].getContext('2d').getImageData(0,0,48,48).data;
-  const tier = (x,y)=> furTier(d[(y*48+x)*4],d[(y*48+x)*4+1],d[(y*48+x)*4+2],d[(y*48+x)*4+3]);
-  let maxY = 0; for(let y=0;y<48;y++) for(let x=0;x<48;x++) if(tier(x,y)>=0) maxY = y;
-  const Z = JZONE[f] || {};
-  const y0 = Z.y0 ?? Math.round(A.y + 5), y1 = Z.y1 ?? (maxY - 1);
-  const x0 = Z.x0 ?? Math.floor(A.L - 7), x1 = Z.x1 ?? Math.ceil(A.R + 5);
+  const A = ANCHOR[f], d = frameCache[f].getContext('2d').getImageData(0,0,FS,FS).data;
+  const tier = (x,y)=>{ const i=(y*FS+x)*4; return furTier(d[i],d[i+1],d[i+2],d[i+3]); };
+  let maxY = 0; for(let y=0;y<FS;y++) for(let x=0;x<FS;x++) if(tier(x,y)>=0) maxY = y;
+  const Z = JZONE[f] || {}, R = RES;
+  const y0 = Z.y0!=null ? Z.y0*R : Math.round((A.y + 5)*R), y1 = Z.y1!=null ? Z.y1*R : (maxY - 2);
+  const x0 = Z.x0!=null ? Z.x0*R : Math.floor((A.L - 7)*R), x1 = Z.x1!=null ? Z.x1*R+1 : Math.ceil((A.R + 5)*R);
   const inZ = (x,y)=> x>=x0 && x<=x1 && y>=y0 && y<=y1 && tier(x,y)>=0;
   const m = new Map();
-  if(Z.zoneOnly){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inZ(x,y)) m.set(y*48+x, tier(x,y)); }
+  if(Z.zoneOnly){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) if(inZ(x,y)) m.set(y*FS+x, tier(x,y)); }
   else {
-    const seeds = Z.seed || [];
-    if(!Z.seed){ const sy = Math.min(y1, y0 + 2); for(let x=Math.floor(A.L); x<=Math.ceil(A.R); x++) seeds.push([x, sy]); }
+    const seeds = Z.seed ? Z.seed.map(([x,y])=>[x*R,y*R]) : [];
+    if(!Z.seed){ const sy = Math.min(y1, y0 + 4); for(let x=Math.floor(A.L*R); x<=Math.ceil(A.R*R); x++) seeds.push([x, sy]); }
     const q = seeds.filter(([x,y])=>inZ(x,y));
-    while(q.length){ const [x,y] = q.pop(), k = y*48+x; if(m.has(k) || !inZ(x,y)) continue; m.set(k, tier(x,y)); q.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]); }
+    while(q.length){ const [x,y] = q.pop(), k = y*FS+x; if(m.has(k) || !inZ(x,y)) continue; m.set(k, tier(x,y)); q.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]); }
   }
-  return (JMASK[f] = {m, y0, cx: Math.round((A.L+A.R)/2)});
+  return (JMASK[f] = {m});
 }
+/* 3x5 pixel font for the chest wordmark (our own name — never a real team mark) */
+const PXF = {K:['#.#','##.','#..','##.','#.#'], U:['#.#','#.#','#.#','#.#','###'], N:['#.#','###','###','###','#.#'], Y:['#.#','#.#','.#.','.#.','.#.'], A:['.#.','#.#','###','#.#','#.#'], G:['###','#..','#.#','#.#','###']};
+/* jersey detail: ribbed collar + V-neck, slanted chest wordmark, placket with buttons, side piping, belt + buckle, pants */
 function paintJersey(d, f, U){
   const J = jerseyMask(f), B = hex(U.b), B2 = U.b2 ? hex(U.b2) : null, P = U.pin ? hex(U.pin) : null, T = hex(U.t), L = hex(U.l);
-  const top = Math.min(...[...J.m.keys()].map(k=>Math.floor(k/48)).concat([99]));
+  const PANTS = hex(U.pants || '#efeee9'), BELT = hex(U.belt || '#2b2b35'), WHITE = [255,255,255], BUCKLE = hex('#d9d2bb');
+  const rows = new Map();
+  J.m.forEach((t,k)=>{ const x=k%FS, y=Math.floor(k/FS); const r=rows.get(y)||[999,-1]; rows.set(y,[Math.min(r[0],x),Math.max(r[1],x)]); });
+  if(!rows.size) return;
+  const ys = [...rows.keys()], top = Math.min(...ys), bot = Math.max(...ys), tall = bot - top;
+  const full = !JZONE[f] && tall >= 9;
+  const ref = rows.get(Math.min(bot, top+6)) || rows.get(top), cx = Math.floor((ref[0]+ref[1])/2);
+  const beltY = full ? bot - 4 : 999;                                   // 2px belt, 3px pants
+  const word = (U.word || 'KKUK').split(''), ww = word.length*4 - 1, wx0 = cx - Math.floor(ww/2), wy0 = top + 5;
+  const wordAt = (x,y)=>{ const r = y - wy0; if(r<0||r>4) return false;
+    const xx = x - wx0; if(xx<0||xx>=ww) return false; const li = Math.floor(xx/4), cx_ = xx%4; if(cx_===3) return false; const g = PXF[word[li]]; return !!(g && g[r][cx_]==='#'); };
+  const capOf = new Set(); J.m.forEach((t,k)=>{ const x=k%FS, y=Math.floor(k/FS); if(full && y>=wy0-1 && y<=wy0+5) for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1]]) if(wordAt(x+dx,y+dy) && !wordAt(x,y)) capOf.add(k); });
   J.m.forEach((t, k)=>{
-    const x = k%48, y = Math.floor(k/48);
-    let c = (B2 && (x - J.cx) + (y - top) * 0.9 > 1) ? B2 : B;
-    if(P && x%3===0) c = P;
-    if(y===top) c = T;                                            // collar trim
-    if(y===top+2 && Math.abs(x-J.cx)<=3 && (x+J.cx)%2===0) c = L; // chest lettering
+    const x = k%FS, y = Math.floor(k/FS), [r0, r1] = rows.get(y);
+    let c = (B2 && (x - cx) + (y - top) * 0.9 > 2) ? B2 : B;
+    if(P && x%4===0) c = P;
+    if(y > beltY+1){ c = PANTS; if(x===r0+1 || x===r1-1) c = T; }                       // pants + side stripe
+    else if(y >= beltY){ c = Math.abs(x-cx-0.5) <= 1.5 ? BUCKLE : BELT; }                  // belt + buckle
+    else if(y <= top+1){ c = (y===top && (x%2)) ? T.map(v=>Math.min(255,v*1.15)) : T; }   // ribbed collar
+    else if(full){
+      const vy = y - (top+2);
+      if(vy>=0 && vy<3 && Math.abs(x - cx - 0.5) <= 2.5 - vy) c = T;                     // V-neck
+      if(wordAt(x,y)) c = L;                                                            // wordmark
+      if(y >= wy0+7 && (x===cx || x===cx+1)) c = (x===cx+1 && (y - wy0)%3===0) ? WHITE : T;  // placket + buttons
+      if((x === r0+1 || x === r1-1) && y > top+2) c = T;                                 // side piping
+    }
     const sh = t===0 ? 1 : t===1 ? .9 : .74;
     d[k*4] = Math.min(255,c[0]*sh); d[k*4+1] = Math.min(255,c[1]*sh); d[k*4+2] = Math.min(255,c[2]*sh);
   });
@@ -507,29 +551,43 @@ function paintJersey(d, f, U){
 const CAPMASK = {};
 function capMask(f){
   if(CAPMASK[f]) return CAPMASK[f];
-  const A = ANCHOR[f], d = frameCache[f].getContext('2d').getImageData(0,0,48,48).data;
-  const P = (x,y)=>{ const i=(y*48+x)*4; return [d[i],d[i+1],d[i+2],d[i+3]]; };
-  const isCap = (x,y)=>{ if(x<0||x>47||y<0||y>47) return false; const [r,g,b,a]=P(x,y); return a && b-r>60 && b>100; };
+  const A = ANCHOR[f], d = frameCache[f].getContext('2d').getImageData(0,0,FS,FS).data;
+  const P = (x,y)=>{ const i=(y*FS+x)*4; return [d[i],d[i+1],d[i+2],d[i+3]]; };
+  const isCap = (x,y)=>{ if(x<0||x>=FS||y<0||y>=FS) return false; const [r,g,b,a]=P(x,y); return a && b-r>60 && b>100; };
   const isDark = (x,y)=>{ const [r,g,b,a]=P(x,y); return a && (r+g+b)/3<90 && !isCap(x,y); };
-  const lim = Math.round(A.y);  // only the hat (the eat bowl sits lower)
-  let top = 48; for(let y=0;y<lim;y++) for(let x=0;x<48;x++) if(isCap(x,y)) top = Math.min(top,y);
-  // brim separator: a long dark run with cap pixels just below it
+  const lim = Math.round(A.y*RES);
+  let top = FS, xmin = FS, xmax = -1;
+  for(let y=0;y<lim;y++) for(let x=0;x<FS;x++) if(isCap(x,y)){ top = Math.min(top,y); }
   let sep = -1;
   for(let y=top; y<lim; y++){
-    let run=0, best=0; for(let x=0;x<48;x++){ if(isDark(x,y)){ run++; continue; } if(run && isCap(x,y) && isCap(x-run-1,y)) best = Math.max(best,run); run = 0; }
-    let below=0; for(let yy=y+1; yy<=Math.min(lim-1,y+3); yy++) for(let x=0;x<48;x++) if(isCap(x,yy)) below++;
-    if(best>=5 && below>=5){ sep = y; break; }
+    let run=0, best=0; for(let x=0;x<FS;x++){ if(isDark(x,y)){ run++; continue; } if(run && isCap(x,y) && isCap(x-run-1,y)) best = Math.max(best,run); run = 0; }
+    let below=0; for(let yy=y+1; yy<=Math.min(lim-1,y+6); yy++) for(let x=0;x<FS;x++) if(isCap(x,yy)) below++;
+    if(best>=8 && below>=10){ sep = y; break; }
   }
-  const brim = new Set(), logo = new Set();
-  for(let y=top; y<lim; y++) for(let x=0;x<48;x++){
-    if(isCap(x,y) && sep>=0 && y>sep) brim.add(y*48+x);
+  const brim = new Set(), logo = new Set(), crown = new Set();
+  for(let y=top; y<lim; y++) for(let x=0;x<FS;x++){
+    if(isCap(x,y)){ if(sep>=0 && y>sep) brim.add(y*FS+x); else { crown.add(y*FS+x); xmin=Math.min(xmin,x); xmax=Math.max(xmax,x); } }
     const [r,g,b,a] = P(x,y);
     if(a && (r+g+b)/3>230 && (sep<0 || y<sep)){
-      let L=false, R=false; for(let k=1;k<=3;k++){ if(isCap(x-k,y)) L=true; if(isCap(x+k,y)) R=true; }
-      if(L && R) logo.add(y*48+x);
+      let Lf=false, Rt=false; for(let k=1;k<=6;k++){ if(isCap(x-k,y)) Lf=true; if(isCap(x+k,y)) Rt=true; }
+      if(Lf && Rt) logo.add(y*FS+x);
     }
   }
-  return (CAPMASK[f] = {brim, logo, lim});
+  let ltop = FS; logo.forEach(k=>{ ltop = Math.min(ltop, Math.floor(k/FS)); });
+  return (CAPMASK[f] = {brim, logo, crown, top, sep, cx: Math.round((xmin+xmax)/2), ltop});
+}
+/* team cap detail: logo recolour + contrasting outline, centre seam, top button, darker brim underside */
+function capDetail(d, CM, TH, cc, bc){
+  const set = (k,c,sh=1)=>{ d[k*4]=Math.min(255,c[0]*sh); d[k*4+1]=Math.min(255,c[1]*sh); d[k*4+2]=Math.min(255,c[2]*sh); };
+  const lc = hex(TH.logo || '#ffffff'), oc = hex(TH.logo2 || (TH.logo && TH.logo.toLowerCase()!=='#ffffff' ? '#ffffff' : TH.brim || TH.c));
+  CM.crown.forEach(k=>{ const x=k%FS, y=Math.floor(k/FS); if(x===CM.cx && y < CM.ltop-1) set(k, cc, .72); });
+  [[0,0],[-1,0]].forEach(([dx])=>{ const k=(CM.top+1)*FS+CM.cx+dx; if(CM.crown.has(k)) set(k, cc, 1.35); });
+  CM.logo.forEach(k=>{
+    const near = [1,-1,FS,-FS].some(o=>!CM.logo.has(k+o) && CM.crown.has(k+o));
+    set(k, lc);
+    [1,-1,FS,-FS].forEach(o=>{ if(TH.logo2 && CM.crown.has(k+o) && !CM.logo.has(k+o)) set(k+o, oc, .95); });
+  });
+  if(CM.sep>=0){ let maxb=-1; CM.brim.forEach(k=>{ maxb=Math.max(maxb,Math.floor(k/FS)); }); CM.brim.forEach(k=>{ if(Math.floor(k/FS)===maxb) set(k, bc, .7); }); }
 }
 function teamHat(L){ return L.cap==='team' && UNIS[L.uni] && UNIS[L.uni].hat ? UNIS[L.uni].hat : null; }
 function capName(cap, uni){ return cap==='team' ? (UNIS[uni] && UNIS[uni].hat ? UNIS[uni].n+' 모자' : CAPS.blue.n) : (CAPS[cap]||CAPS.blue).n; }
@@ -555,14 +613,14 @@ function frame(k, o){
   const L = looks(o); const accKey = ACCS.filter(a=>L.acc[a.k] && a.ok()).map(a=>a.k).join(',');
   const key = `${f}|${L.fur}|${L.cap}|${L.stripe}|${L.uni}|${accKey}`;
   if(styled.has(key)) return styled.get(key);
-  const c = document.createElement('canvas'); c.width=48; c.height=48; const x = c.getContext('2d');
+  const c = document.createElement('canvas'); c.width=FS; c.height=FS; const x = c.getContext('2d');
   x.drawImage(frameCache[f],0,0);
-  const img = x.getImageData(0,0,48,48), d = img.data;
+  const img = x.getImageData(0,0,FS,FS), d = img.data;
   const fp = FURS[L.fur] && FURS[L.fur].p ? FURS[L.fur].p.map(hex) : null, TH = teamHat(L), CM = TH && ANCHOR[f] ? capMask(f) : null, cc = hex(TH ? TH.c : (CAPS[L.cap]||CAPS.blue).c), bc = TH ? hex(TH.brim||TH.c) : cc, sc = L.stripe && L.stripe!=='none' && STRIPES[L.stripe] ? hex(STRIPES[L.stripe].c) : null;
   for(let i=0;i<d.length;i+=4){
     if(!d[i+3]) continue; const r=d[i], g=d[i+1], b=d[i+2];
     if(b-r>60 && b>100 && (L.cap!=='blue' || sc)){
-      const t=((r+g+b)/3)/97, px=(i/4)%48;
+      const t=((r+g+b)/3)/97, px=Math.floor(((i/4)%FS)/RES);
       const onBrim = CM && CM.brim.has(i/4), base = onBrim ? bc : sc && px%4===1 ? sc : cc, k = !onBrim && sc && px%4===1 ? Math.max(.7, Math.min(1.15, t)) : t;
       d[i]=Math.min(255,base[0]*k); d[i+1]=Math.min(255,base[1]*k); d[i+2]=Math.min(255,base[2]*k); continue;
     }
@@ -570,10 +628,10 @@ function frame(k, o){
       const lum=(r+g+b)/3, t = lum>=238 ? fp[0] : lum>=225 ? fp[1] : fp[2]; d[i]=t[0]; d[i+1]=t[1]; d[i+2]=t[2];
     }
   }
-  if(CM && TH.logo){ const lc = hex(TH.logo); CM.logo.forEach(k=>{ d[k*4]=lc[0]; d[k*4+1]=lc[1]; d[k*4+2]=lc[2]; }); }
   if(L.uni && L.uni!=='none' && UNIS[L.uni] && ANCHOR[f]) paintJersey(d, f, UNIS[L.uni]);
+  if(CM) capDetail(d, CM, TH, cc, bc);
   x.putImageData(img,0,0);
-  drawAccessories(x, f, accKey.split(','));
+  x.setTransform(RES,0,0,RES,0,0); drawAccessories(x, f, accKey.split(',')); x.setTransform(1,0,0,1,0,0);
   styled.set(key,c); return c;
 }
 function drawAccessories(x, f, on){
@@ -793,7 +851,7 @@ function drawCat(x, sprite, bob=0, h=46, cx=22){
   if(!sprite) return;
   pxEll(ctx, x, GROUND+.5, 16, 2.2, 'rgba(44,46,61,.16)');
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sprite, Math.round(x)-cx*2, GROUND+1-(h+1)*2+bob, sprite.width*2, sprite.height*2);
+  ctx.drawImage(sprite, Math.round(x)-cx*2, GROUND+1-(h+1)*2+bob, sprite.width*2/RES, sprite.height*2/RES);
 }
 
 function draw(ts){
@@ -1037,7 +1095,7 @@ function choose(){ const k = MENU[sel][0]; if(k==='status'){ showView('status');
 $('#menu-back').addEventListener('click', ()=>showView('main'));
 $('#status-back').addEventListener('click', ()=>showView('main'));
 function renderStatusView(){
-  const x = $('#sv-cat').getContext('2d'); x.fillStyle='#e9ebe8'; x.fillRect(0,0,48,48); if(sheetReady) x.drawImage(frame(baseMood()),0,0);
+  const x = $('#sv-cat').getContext('2d'); x.fillStyle='#e9ebe8'; x.fillRect(0,0,FS,FS); if(sheetReady) x.drawImage(frame(baseMood()),0,0);
   $('#sv-name').textContent = st.name; $('#sv-born').textContent = fmtDate(st.born);
   $('#sv-lv').textContent = `LV.${st.level}`; $('#sv-bar').style.width = `${Math.min(100, st.xp/needXp(st.level)*100)}%`;
   $('#sv-say').textContent = $('#quote').textContent;
@@ -1076,13 +1134,13 @@ const MOODS = [['normal','기본'],['happy','신남'],['eat','먹기'],['play','
 const moodsEl = $('#moods');
 MOODS.forEach(([k,label])=>{
   const fig = document.createElement('figure'); fig.dataset.k = k;
-  const c = document.createElement('canvas'); c.width=48; c.height=48;
+  const c = document.createElement('canvas'); c.width=FS; c.height=FS;
   fig.appendChild(c); const cap = document.createElement('figcaption'); cap.textContent = label; fig.appendChild(cap);
   moodsEl.appendChild(fig);
 });
 function drawThumbs(){
-  moodsEl.querySelectorAll('figure').forEach(fig=>{ const x=fig.querySelector('canvas').getContext('2d'); x.clearRect(0,0,48,48); x.fillStyle='#e9ebe8'; x.fillRect(0,0,48,48); x.fillStyle='#dfe3d8'; x.fillRect(0,44,48,4); x.drawImage(frame(fig.dataset.k),0,0); });
-  const d=$('#dream').getContext('2d'); d.clearRect(0,0,48,48); d.drawImage(frame('happy'),0,0);
+  moodsEl.querySelectorAll('figure').forEach(fig=>{ const x=fig.querySelector('canvas').getContext('2d'); x.clearRect(0,0,FS,FS); x.fillStyle='#e9ebe8'; x.fillRect(0,0,FS,FS); x.fillStyle='#dfe3d8'; x.fillRect(0,44*RES,FS,4*RES); x.drawImage(frame(fig.dataset.k),0,0); });
+  const d=$('#dream').getContext('2d'); d.clearRect(0,0,FS,FS); d.drawImage(frame('happy'),0,0);
 }
 
 const avatar = $('#avatar').getContext('2d');
@@ -1114,8 +1172,8 @@ function renderStats(){
   const key = m + (st.clean<25);
   if(key !== lastAvatarKey){
     lastAvatarKey = key;
-    avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,48,48);
-    if(sheetReady){ avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,48,48); avatar.drawImage(frame(m),0,0); } else lastAvatarKey='';
+    avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,FS,FS);
+    if(sheetReady){ avatar.fillStyle='#e9ebe8'; avatar.fillRect(0,0,FS,FS); avatar.drawImage(frame(m),0,0); } else lastAvatarKey='';
   }
 }
 function renderProfile(){
@@ -1203,7 +1261,7 @@ function uniSwatch(v){
   if(v.b2) return `${trim}, linear-gradient(135deg,${v.b} 0 55%,${v.b2} 55%)`;
   return `${trim}, linear-gradient(${v.b},${v.b})`;
 }
-function paintPreview(id, o, k='happy'){ const x=$(id).getContext('2d'); x.clearRect(0,0,48,48); x.fillStyle='#e9ebe8'; x.fillRect(0,0,48,48); x.fillStyle='#dfe3d8'; x.fillRect(0,44,48,4); if(sheetReady) x.drawImage(frame(k,o),0,0); }
+function paintPreview(id, o, k='happy'){ const x=$(id).getContext('2d'); x.clearRect(0,0,FS,FS); x.fillStyle='#e9ebe8'; x.fillRect(0,0,FS,FS); x.fillStyle='#dfe3d8'; x.fillRect(0,44*RES,FS,4*RES); if(sheetReady) x.drawImage(frame(k,o),0,0); }
 function refreshLooks(){ lastAvatarKey=''; drawThumbs(); renderAll(); paintPreview('#closet-cv'); save(); }
 function renderCloset(){
   if(!sheetReady) return;
@@ -1363,7 +1421,7 @@ function miniScene(ts, X, Y){
   else if(anim && anim.type==='gift'){ f = 'happy'; }
   else { f = faceNow(ts); if(walking) bob = -(Math.floor(ts/170)%2); }
   const fr = frame(f);
-  if(fr){ dctx.fillStyle = 'rgba(44,46,61,.16)'; dctx.fillRect(X+Math.round(cx*k)-12, gy+1, 24, 2); dctx.drawImage(fr, X+Math.round(cx*k)-22, gy-46+bob); }
+  if(fr){ dctx.fillStyle = 'rgba(44,46,61,.16)'; dctx.fillRect(X+Math.round(cx*k)-12, gy+1, 24, 2); dctx.drawImage(fr, X+Math.round(cx*k)-22, gy-46+bob, 48, 48); }
   if(tr){
     if(tr.phase==='pitch'){ const [bx,by,r] = ballAt((ts-tr.start)/tr.dur); pxDisc(dctx, X+Math.round(bx*k), Y+Math.round(by*k), Math.max(1,Math.round(r*.8)), INK); pxDisc(dctx, X+Math.round(bx*k), Y+Math.round(by*k), Math.max(0,Math.round(r*.8)-1), '#ffffff'); }
     const zp = tr.phase==='pitch' ? (ts-tr.start)/tr.dur : -1; dctx.fillStyle = Math.abs(zp-1)<=GOOD ? '#ffd35a' : 'rgba(255,255,255,.6)';
