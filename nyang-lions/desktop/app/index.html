@@ -509,7 +509,7 @@ const UNIS = {
   suwon:  {n:'수원 블랙',     b:'#202026', t:'#e0262f', l:'#ffffff', hat:{c:'#2e2e38', brim:'#2e2e38', logo:'#e0262f'}},
   busan:  {n:'부산 네이비',   b:'#1c2a54', t:'#d22630', l:'#d22630', hat:{c:'#1c2a54', brim:'#1c2a54', logo:'#e0303f'}},
   gwangju:{n:'광주 블랙레드', b:'#1c1c22', b2:'#d1112b', t:'#d1112b', l:'#ffffff', hat:{c:'#2e2e38', brim:'#d1112b', logo:'#ffffff'}},
-  jamsilw:{n:'잠실 화이트',   b:'#f6f5f1', t:'#13294b', l:'#13294b', hat:{c:'#13294b', brim:'#13294b', logo:'#ffffff'}},
+  jamsilw:{n:'잠실 화이트',   b:'#f6f5f1', t:'#13294b', l:'#13294b', acc:'#c8102e', hat:{c:'#13294b', brim:'#13294b', logo:'#ffffff', logo2:'#c8102e'}},
   gocheok:{n:'고척 버건디',   b:'#7a1f35', t:'#e8a1b7', l:'#ffffff', hat:{c:'#7a1f35', brim:'#7a1f35', logo:'#f4b8ca'}}
 };
 /* which fur pixels of each frame are "body" (jersey area): flood from the chest, below the chin, bottom paw row kept.
@@ -541,7 +541,7 @@ const PXF = {K:['#.#','##.','#..','##.','#.#'], U:['#.#','#.#','#.#','#.#','###'
 /* jersey detail: ribbed collar + V-neck, slanted chest wordmark, placket with buttons, side piping, belt + buckle, pants */
 function paintJersey(d, f, U){
   const J = jerseyMask(f), B = hex(U.b), B2 = U.b2 ? hex(U.b2) : null, P = U.pin ? hex(U.pin) : null, T = hex(U.t), L = hex(U.l);
-  const PANTS = hex(U.pants || '#efeee9'), BELT = hex(U.belt || '#2b2b35'), WHITE = [255,255,255], BUCKLE = hex('#d9d2bb');
+  const AC = U.acc ? hex(U.acc) : T, PANTS = hex(U.pants || '#efeee9'), BELT = hex(U.belt || '#2b2b35'), WHITE = [255,255,255], BUCKLE = hex('#d9d2bb');
   const rows = new Map();
   J.m.forEach((t,k)=>{ const x=k%FS, y=Math.floor(k/FS); const r=rows.get(y)||[999,-1]; rows.set(y,[Math.min(r[0],x),Math.max(r[1],x)]); });
   if(!rows.size) return;
@@ -557,15 +557,16 @@ function paintJersey(d, f, U){
     const x = k%FS, y = Math.floor(k/FS), [r0, r1] = rows.get(y);
     let c = (B2 && (x - cx) + (y - top) * 0.9 > 2) ? B2 : B;
     if(P && x%4===0) c = P;
-    if(y > beltY+1){ c = PANTS; if(x===r0+1 || x===r1-1) c = T; }                       // pants + side stripe
+    if(y > beltY+1){ c = PANTS; if(x===r0+1 || x===r1-1) c = AC; }                      // pants + side stripe
     else if(y >= beltY){ c = Math.abs(x-cx-0.5) <= 1.5 ? BUCKLE : BELT; }                  // belt + buckle
     else if(y <= top+1){ c = (y===top && (x%2)) ? T.map(v=>Math.min(255,v*1.15)) : T; }   // ribbed collar
     else if(full){
       const vy = y - (top+2);
-      if(vy>=0 && vy<3 && Math.abs(x - cx - 0.5) <= 2.5 - vy) c = T;                     // V-neck
+      if(vy>=0 && vy<3 && Math.abs(x - cx - 0.5) <= 2.5 - vy) c = (U.acc && Math.abs(x - cx - 0.5) >= 1.5 - vy) ? AC : T;  // V-neck (accent edge)
+      if(U.acc && !wordAt(x,y) && wordAt(x-1,y-1)) c = AC;                            // wordmark drop shadow
       if(wordAt(x,y)) c = L;                                                            // wordmark
       if(y >= wy0+7 && (x===cx || x===cx+1)) c = (x===cx+1 && (y - wy0)%3===0) ? WHITE : T;  // placket + buttons
-      if((x === r0+1 || x === r1-1) && y > top+2) c = T;                                 // side piping
+      if((x === r0+1 || x === r1-1) && y > top+2) c = AC;                                // side piping
     }
     const sh = t===0 ? 1 : t===1 ? .9 : .74;
     d[k*4] = Math.min(255,c[0]*sh); d[k*4+1] = Math.min(255,c[1]*sh); d[k*4+2] = Math.min(255,c[2]*sh);
